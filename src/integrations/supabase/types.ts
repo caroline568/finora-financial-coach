@@ -16,99 +16,135 @@ export type Database = {
     Tables: {
       bills: {
         Row: {
-          amount: number
-          category: string | null
+          amount_kes: number
           created_at: string
-          due_day: number
+          due_date: string
+          frequency: string
           id: string
-          title: string
-          updated_at: string
+          is_paid: boolean
+          name: string
           user_id: string
         }
         Insert: {
-          amount: number
-          category?: string | null
+          amount_kes: number
           created_at?: string
-          due_day: number
+          due_date: string
+          frequency?: string
           id?: string
-          title: string
-          updated_at?: string
+          is_paid?: boolean
+          name: string
           user_id: string
         }
         Update: {
-          amount?: number
-          category?: string | null
+          amount_kes?: number
           created_at?: string
-          due_day?: number
+          due_date?: string
+          frequency?: string
           id?: string
-          title?: string
-          updated_at?: string
+          is_paid?: boolean
+          name?: string
           user_id?: string
         }
         Relationships: []
       }
       daily_priorities: {
         Row: {
-          created_at: string
+          completed_at: string | null
           encouragement: string | null
-          for_date: string
+          generated_at: string
           goal_connection: string | null
           id: string
-          priority: string
-          reasoning: string
+          is_done: boolean
+          priority_date: string
+          reasoning: string | null
+          recommendation: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          completed_at?: string | null
           encouragement?: string | null
-          for_date?: string
+          generated_at?: string
           goal_connection?: string | null
           id?: string
-          priority: string
-          reasoning: string
+          is_done?: boolean
+          priority_date?: string
+          reasoning?: string | null
+          recommendation: string
           user_id: string
         }
         Update: {
-          created_at?: string
+          completed_at?: string | null
           encouragement?: string | null
-          for_date?: string
+          generated_at?: string
           goal_connection?: string | null
           id?: string
-          priority?: string
-          reasoning?: string
+          is_done?: boolean
+          priority_date?: string
+          reasoning?: string | null
+          recommendation?: string
           user_id?: string
         }
         Relationships: []
       }
       debts: {
         Row: {
-          balance: number
           created_at: string
           id: string
           interest_rate: number | null
-          monthly_payment: number | null
-          title: string
-          updated_at: string
+          monthly_payment_kes: number | null
+          name: string
+          remaining_kes: number
+          total_amount_kes: number
           user_id: string
         }
         Insert: {
-          balance: number
           created_at?: string
           id?: string
           interest_rate?: number | null
-          monthly_payment?: number | null
-          title: string
-          updated_at?: string
+          monthly_payment_kes?: number | null
+          name: string
+          remaining_kes: number
+          total_amount_kes: number
           user_id: string
         }
         Update: {
-          balance?: number
           created_at?: string
           id?: string
           interest_rate?: number | null
-          monthly_payment?: number | null
-          title?: string
-          updated_at?: string
+          monthly_payment_kes?: number | null
+          name?: string
+          remaining_kes?: number
+          total_amount_kes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          saved_so_far_kes: number
+          target_amount_kes: number
+          target_date: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          saved_so_far_kes?: number
+          target_amount_kes: number
+          target_date?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          saved_so_far_kes?: number
+          target_amount_kes?: number
+          target_date?: string | null
           user_id?: string
         }
         Relationships: []
@@ -153,52 +189,70 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_debts_kes: number
           created_at: string
-          current_savings: number | null
-          current_streak: number
-          goal_current_amount: number | null
-          goal_target_amount: number | null
+          current_savings_kes: number
+          full_name: string | null
           id: string
-          last_active_date: string | null
-          longest_streak: number
-          monthly_income: number | null
-          name: string | null
+          monthly_income_kes: number | null
+          mpesa_phone: string | null
           onboarded: boolean
+          plan: string
           primary_goal: string | null
-          top_spending_categories: string[] | null
+          spending_categories: string[] | null
           updated_at: string
         }
         Insert: {
+          active_debts_kes?: number
           created_at?: string
-          current_savings?: number | null
-          current_streak?: number
-          goal_current_amount?: number | null
-          goal_target_amount?: number | null
+          current_savings_kes?: number
+          full_name?: string | null
           id: string
-          last_active_date?: string | null
-          longest_streak?: number
-          monthly_income?: number | null
-          name?: string | null
+          monthly_income_kes?: number | null
+          mpesa_phone?: string | null
           onboarded?: boolean
+          plan?: string
           primary_goal?: string | null
-          top_spending_categories?: string[] | null
+          spending_categories?: string[] | null
           updated_at?: string
         }
         Update: {
+          active_debts_kes?: number
           created_at?: string
-          current_savings?: number | null
-          current_streak?: number
-          goal_current_amount?: number | null
-          goal_target_amount?: number | null
+          current_savings_kes?: number
+          full_name?: string | null
           id?: string
-          last_active_date?: string | null
-          longest_streak?: number
-          monthly_income?: number | null
-          name?: string | null
+          monthly_income_kes?: number | null
+          mpesa_phone?: string | null
           onboarded?: boolean
+          plan?: string
           primary_goal?: string | null
-          top_spending_categories?: string[] | null
+          spending_categories?: string[] | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          current_streak: number
+          last_action_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_action_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_action_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -228,33 +282,36 @@ export type Database = {
       }
       transactions: {
         Row: {
-          amount: number
+          amount_kes: number
           category: string | null
           created_at: string
-          description: string | null
           id: string
-          kind: string
-          occurred_at: string
+          note: string | null
+          source: string
+          transaction_date: string
+          type: string
           user_id: string
         }
         Insert: {
-          amount: number
+          amount_kes: number
           category?: string | null
           created_at?: string
-          description?: string | null
           id?: string
-          kind: string
-          occurred_at?: string
+          note?: string | null
+          source?: string
+          transaction_date?: string
+          type: string
           user_id: string
         }
         Update: {
-          amount?: number
+          amount_kes?: number
           category?: string | null
           created_at?: string
-          description?: string | null
           id?: string
-          kind?: string
-          occurred_at?: string
+          note?: string | null
+          source?: string
+          transaction_date?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
