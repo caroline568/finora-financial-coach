@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
+import { addGoal } from "@/lib/finance.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const fetchProfile = useServerFn(getMyProfile);
   const saveProfile = useServerFn(updateMyProfile);
+  const createGoal = useServerFn(addGoal);
   const { data, isLoading } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
@@ -53,12 +55,15 @@ function Onboarding() {
 
   useEffect(() => {
     if (data?.profile) {
-      setName(data.profile.name ?? "");
-      setIncome(data.profile.monthly_income ? String(data.profile.monthly_income) : "");
-      setSavings(data.profile.current_savings ? String(data.profile.current_savings) : "");
+      setName(data.profile.full_name ?? "");
+      setIncome(
+        data.profile.monthly_income_kes ? String(data.profile.monthly_income_kes) : "",
+      );
+      setSavings(
+        data.profile.current_savings_kes ? String(data.profile.current_savings_kes) : "",
+      );
       setGoal(data.profile.primary_goal ?? "");
-      setGoalTarget(data.profile.goal_target_amount ? String(data.profile.goal_target_amount) : "");
-      setCategories(data.profile.top_spending_categories ?? []);
+      setCategories(data.profile.spending_categories ?? []);
     }
   }, [data]);
 
@@ -73,17 +78,30 @@ function Onboarding() {
   async function finish() {
     setSaving(true);
     try {
+      const goalText = goal.trim() || "Build my first emergency fund";
       await saveProfile({
         data: {
-          name: name.trim() || "friend",
-          monthly_income: Number(income) || 0,
-          current_savings: Number(savings) || 0,
-          primary_goal: goal.trim() || "Build my first emergency fund",
-          goal_target_amount: Number(goalTarget) || undefined,
-          top_spending_categories: categories,
+          full_name: name.trim() || "friend",
+          monthly_income_kes: Number(income) || 0,
+          current_savings_kes: Number(savings) || 0,
+          primary_goal: goalText,
+          spending_categories: categories,
           onboarded: true,
         },
       });
+      if (Number(goalTarget) > 0) {
+        try {
+          await createGoal({
+            data: {
+              name: goalText,
+              target_amount_kes: Number(goalTarget),
+              saved_so_far_kes: Number(savings) || 0,
+            },
+          });
+        } catch {
+          // non-blocking
+        }
+      }
       toast.success("Sawa — let's get to work.");
       navigate({ to: "/app", replace: true });
     } catch (err) {

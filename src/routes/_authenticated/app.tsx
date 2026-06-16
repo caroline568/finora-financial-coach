@@ -2,15 +2,36 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMyProfile, touchStreak } from "@/lib/profile.functions";
-import { getFinanceSnapshot, addBill, addDebt, addTransaction, deleteBill, deleteDebt, deleteTransaction } from "@/lib/finance.functions";
+import { getMyProfile, touchStreak, getStreak } from "@/lib/profile.functions";
+import {
+  getFinanceSnapshot,
+  addBill,
+  addDebt,
+  addTransaction,
+  deleteBill,
+  deleteDebt,
+  deleteTransaction,
+} from "@/lib/finance.functions";
 import { getOrGenerateDailyPriority, regenerateDailyPriority } from "@/lib/daily-priority.functions";
 import { AppShell } from "@/components/finora/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Loader2,
   Plus,
@@ -37,12 +58,15 @@ const kes = (n: number | string | null | undefined) => {
   return `KES ${v.toLocaleString("en-KE", { maximumFractionDigits: 0 })}`;
 };
 
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
 function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const fetchProfile = useServerFn(getMyProfile);
+  const fetchStreak = useServerFn(getStreak);
   const fetchSnapshot = useServerFn(getFinanceSnapshot);
   const fetchPriority = useServerFn(getOrGenerateDailyPriority);
   const regenPriority = useServerFn(regenerateDailyPriority);
@@ -51,17 +75,19 @@ function Dashboard() {
   const removeDebt = useServerFn(deleteDebt);
   const removeTx = useServerFn(deleteTransaction);
 
-
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
   }, []);
 
   const profileQuery = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
+  const streakQuery = useQuery({ queryKey: ["streak"], queryFn: () => fetchStreak() });
   const snapshotQuery = useQuery({ queryKey: ["snapshot"], queryFn: () => fetchSnapshot() });
 
   // Touch streak once on mount
   useEffect(() => {
-    touch().then(() => queryClient.invalidateQueries({ queryKey: ["my-profile"] })).catch(() => {});
+    touch()
+      .then(() => queryClient.invalidateQueries({ queryKey: ["streak"] }))
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -98,23 +124,24 @@ function Dashboard() {
   const bills = snapshot?.bills ?? [];
   const debts = snapshot?.debts ?? [];
   const transactions = snapshot?.transactions ?? [];
+  const goals = snapshot?.goals ?? [];
 
-  const totalDebt = debts.reduce((s, d) => s + Number(d.balance), 0);
-  const totalBillsThisMonth = bills.reduce((s, b) => s + Number(b.amount), 0);
+  const totalDebt = debts.reduce((s, d) => s + Number(d.remaining_kes), 0);
+  const totalBillsThisMonth = bills.reduce((s, b) => s + Number(b.amount_kes), 0);
+  const topGoal = goals[0];
   const goalProgress =
-    profile.goal_target_amount && Number(profile.goal_target_amount) > 0
+    topGoal && topGoal.target_amount_kes > 0
       ? Math.min(
           100,
-          Math.round(
-            ((Number(profile.goal_current_amount) || 0) / Number(profile.goal_target_amount)) * 100,
-          ),
+          Math.round((Number(topGoal.saved_so_far_kes) / Number(topGoal.target_amount_kes)) * 100),
         )
       : null;
 
-  const firstName = (profile.name || "friend").trim().split(/\s+/)[0];
+  const firstName = (profile.full_name || "friend").trim().split(/\s+/)[0];
+  const currentStreak = streakQuery.data?.current_streak ?? 0;
 
   return (
-    <AppShell user={{ email: userEmail, name: profile.name }} streak={profile.current_streak}>
+    <AppShell user={{ email: userEmail, name: profile.full_name }} streak={currentStreak}>
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8">
           <p className="text-sm text-muted-foreground">{greeting()}, {firstName}.</p>
@@ -139,7 +166,7 @@ function Dashboard() {
             ) : priorityQuery.data?.priority ? (
               <>
                 <p className="mt-5 font-display text-2xl font-medium leading-snug text-balance sm:text-3xl">
-                  {priorityQuery.data.priority.priority}
+                  {priorityQuery.data.priority.recommendation}
                 </p>
                 {priorityQuery.data.priority.reasoning && (
                   <p className="mt-4 text-primary-foreground/85 text-pretty">
@@ -174,9 +201,7 @@ function Dashboard() {
                 </div>
               </>
             ) : (
-              <p className="mt-6 text-primary-foreground/80">
-                Loading your priority...
-              </p>
+              <p className="mt-6 text-primary-foreground/80">Loading your priority...</p>
             )}
           </div>
         </section>
@@ -186,16 +211,16 @@ function Dashboard() {
           <Tile
             icon={<Wallet className="h-4 w-4" />}
             label="Monthly income"
-            value={kes(profile.monthly_income)}
+            value={kes(profile.monthly_income_kes)}
           />
           <Tile
             icon={<CircleDollarSign className="h-4 w-4" />}
             label="Savings"
-            value={kes(profile.current_savings)}
+            value={kes(profile.current_savings_kes)}
           />
           <Tile
             icon={<Receipt className="h-4 w-4" />}
-            label="Bills this month"
+            label="Bills"
             value={kes(totalBillsThisMonth)}
             sub={`${bills.length} bill${bills.length === 1 ? "" : "s"}`}
           />
@@ -208,17 +233,20 @@ function Dashboard() {
         </section>
 
         {/* Goal progress */}
-        {profile.primary_goal && (
+        {(topGoal || profile.primary_goal) && (
           <section className="mt-8 rounded-2xl border border-border bg-card p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Your goal
                 </p>
-                <h3 className="mt-1 font-display text-xl font-semibold">{profile.primary_goal}</h3>
-                {profile.goal_target_amount ? (
+                <h3 className="mt-1 font-display text-xl font-semibold">
+                  {topGoal?.name ?? profile.primary_goal}
+                </h3>
+                {topGoal ? (
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {kes(profile.goal_current_amount)} of {kes(profile.goal_target_amount)}
+                    {kes(topGoal.saved_so_far_kes)} of {kes(topGoal.target_amount_kes)}
+                    {topGoal.target_date ? ` · by ${topGoal.target_date}` : ""}
                   </p>
                 ) : null}
               </div>
@@ -248,11 +276,11 @@ function Dashboard() {
             addForm={<AddBillForm />}
             items={bills.map((b) => ({
               id: b.id,
-              primary: b.title,
-              secondary: `Day ${b.due_day} of month${b.category ? ` · ${b.category}` : ""}`,
-              right: kes(b.amount),
+              primary: b.name,
+              secondary: `${b.frequency} · due ${b.due_date}${b.is_paid ? " · paid" : ""}`,
+              right: kes(b.amount_kes),
               onDelete: async () => {
-                await useServerFn(deleteBill)({ data: { id: b.id } });
+                await removeBill({ data: { id: b.id } });
                 queryClient.invalidateQueries({ queryKey: ["snapshot"] });
               },
             }))}
@@ -264,11 +292,11 @@ function Dashboard() {
             addForm={<AddDebtForm />}
             items={debts.map((d) => ({
               id: d.id,
-              primary: d.title,
-              secondary: `${d.monthly_payment ? `${kes(d.monthly_payment)}/mo` : "No payment set"}${d.interest_rate ? ` · ${d.interest_rate}%` : ""}`,
-              right: kes(d.balance),
+              primary: d.name,
+              secondary: `${d.monthly_payment_kes ? `${kes(d.monthly_payment_kes)}/mo` : "No payment set"}${d.interest_rate ? ` · ${d.interest_rate}%` : ""}`,
+              right: kes(d.remaining_kes),
               onDelete: async () => {
-                await useServerFn(deleteDebt)({ data: { id: d.id } });
+                await removeDebt({ data: { id: d.id } });
                 queryClient.invalidateQueries({ queryKey: ["snapshot"] });
               },
             }))}
@@ -280,7 +308,9 @@ function Dashboard() {
           <div className="mb-3 flex items-end justify-between">
             <div>
               <h2 className="font-display text-2xl font-semibold">Recent activity</h2>
-              <p className="text-sm text-muted-foreground">Log spending or income to keep your coach sharp.</p>
+              <p className="text-sm text-muted-foreground">
+                Log spending or income to keep your coach sharp.
+              </p>
             </div>
             <AddTransactionDialog />
           </div>
@@ -293,26 +323,37 @@ function Dashboard() {
               <ul className="divide-y divide-border">
                 {transactions.map((t) => (
                   <li key={t.id} className="flex items-center gap-3 p-4">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-full ${t.kind === "income" ? "bg-success/15 text-success" : t.kind === "saving" ? "bg-primary/10 text-primary" : "bg-warning/15 text-warning-foreground"}`}>
-                      <ArrowUpRight className={`h-4 w-4 ${t.kind === "expense" ? "rotate-180" : ""}`} />
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                        t.type === "income"
+                          ? "bg-success/15 text-success"
+                          : "bg-warning/15 text-warning-foreground"
+                      }`}
+                    >
+                      <ArrowUpRight className={`h-4 w-4 ${t.type === "expense" ? "rotate-180" : ""}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-sm font-medium">
-                        {t.description || t.category || (t.kind === "income" ? "Income" : t.kind === "saving" ? "Saved" : "Expense")}
+                        {t.note || t.category || (t.type === "income" ? "Income" : "Expense")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {t.occurred_at} · {t.kind}
-                        {t.category && t.description ? ` · ${t.category}` : ""}
+                        {t.transaction_date} · {t.type}
+                        {t.category && t.note ? ` · ${t.category}` : ""}
                       </p>
                     </div>
-                    <div className={`text-sm font-semibold ${t.kind === "expense" ? "text-foreground" : "text-success"}`}>
-                      {t.kind === "expense" ? "-" : "+"}{kes(t.amount)}
+                    <div
+                      className={`text-sm font-semibold ${
+                        t.type === "expense" ? "text-foreground" : "text-success"
+                      }`}
+                    >
+                      {t.type === "expense" ? "-" : "+"}
+                      {kes(t.amount_kes)}
                     </div>
                     <Button
                       variant="ghost"
                       size="icon-sm"
                       onClick={async () => {
-                        await useServerFn(deleteTransaction)({ data: { id: t.id } });
+                        await removeTx({ data: { id: t.id } });
                         queryClient.invalidateQueries({ queryKey: ["snapshot"] });
                       }}
                     >
@@ -336,7 +377,17 @@ function greeting() {
   return "Habari ya jioni";
 }
 
-function Tile({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+function Tile({
+  icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -358,7 +409,13 @@ function ListCard({
 }: {
   title: string;
   empty: string;
-  items: { id: string; primary: string; secondary: string; right: string; onDelete: () => Promise<void> }[];
+  items: {
+    id: string;
+    primary: string;
+    secondary: string;
+    right: string;
+    onDelete: () => Promise<void>;
+  }[];
   addLabel: string;
   addForm: React.ReactNode;
 }) {
@@ -374,7 +431,9 @@ function ListCard({
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>{addLabel}</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>{addLabel}</DialogTitle>
+            </DialogHeader>
             <div onClick={() => setOpen(false)}>{addForm}</div>
           </DialogContent>
         </Dialog>
@@ -404,23 +463,23 @@ function ListCard({
 function AddBillForm() {
   const queryClient = useQueryClient();
   const create = useServerFn(addBill);
-  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [day, setDay] = useState("1");
-  const [category, setCategory] = useState("");
+  const [dueDate, setDueDate] = useState(todayISO());
+  const [frequency, setFrequency] = useState<"once" | "weekly" | "monthly">("monthly");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !amount) return;
+    if (!name || !amount) return;
     setBusy(true);
     try {
       await create({
         data: {
-          title: title.trim(),
-          amount: Number(amount),
-          due_day: Number(day),
-          category: category.trim() || null,
+          name: name.trim(),
+          amount_kes: Number(amount),
+          due_date: dueDate,
+          frequency,
         },
       });
       queryClient.invalidateQueries({ queryKey: ["snapshot"] });
@@ -434,22 +493,41 @@ function AddBillForm() {
   return (
     <form onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
-        <Label>Title</Label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Electricity" autoFocus />
+        <Label>Name</Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Electricity"
+          autoFocus
+        />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>Amount (KES)</Label>
-          <Input inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} placeholder="2500" />
+          <Input
+            inputMode="numeric"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
+            placeholder="2500"
+          />
         </div>
         <div className="space-y-1.5">
-          <Label>Due day</Label>
-          <Input inputMode="numeric" value={day} onChange={(e) => setDay(e.target.value.replace(/[^\d]/g, ""))} placeholder="15" />
+          <Label>Due date</Label>
+          <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Category (optional)</Label>
-        <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Utilities" />
+        <Label>Frequency</Label>
+        <Select value={frequency} onValueChange={(v) => setFrequency(v as typeof frequency)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="weekly">Weekly</SelectItem>
+            <SelectItem value="once">One-off</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <DialogFooter>
         <Button type="submit" disabled={busy}>
@@ -464,22 +542,24 @@ function AddBillForm() {
 function AddDebtForm() {
   const queryClient = useQueryClient();
   const create = useServerFn(addDebt);
-  const [title, setTitle] = useState("");
-  const [balance, setBalance] = useState("");
+  const [name, setName] = useState("");
+  const [total, setTotal] = useState("");
+  const [remaining, setRemaining] = useState("");
   const [payment, setPayment] = useState("");
   const [rate, setRate] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !balance) return;
+    if (!name || !total) return;
     setBusy(true);
     try {
       await create({
         data: {
-          title: title.trim(),
-          balance: Number(balance),
-          monthly_payment: payment ? Number(payment) : null,
+          name: name.trim(),
+          total_amount_kes: Number(total),
+          remaining_kes: Number(remaining || total),
+          monthly_payment_kes: payment ? Number(payment) : null,
           interest_rate: rate ? Number(rate) : null,
         },
       });
@@ -494,22 +574,53 @@ function AddDebtForm() {
   return (
     <form onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
-        <Label>Title</Label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="M-Shwari loan" autoFocus />
+        <Label>Name</Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="M-Shwari loan"
+          autoFocus
+        />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Balance (KES)</Label>
-          <Input inputMode="numeric" value={balance} onChange={(e) => setBalance(e.target.value.replace(/[^\d]/g, ""))} placeholder="15000" />
+          <Label>Total (KES)</Label>
+          <Input
+            inputMode="numeric"
+            value={total}
+            onChange={(e) => setTotal(e.target.value.replace(/[^\d]/g, ""))}
+            placeholder="20000"
+          />
         </div>
         <div className="space-y-1.5">
-          <Label>Monthly payment</Label>
-          <Input inputMode="numeric" value={payment} onChange={(e) => setPayment(e.target.value.replace(/[^\d]/g, ""))} placeholder="3000" />
+          <Label>Remaining (KES)</Label>
+          <Input
+            inputMode="numeric"
+            value={remaining}
+            onChange={(e) => setRemaining(e.target.value.replace(/[^\d]/g, ""))}
+            placeholder="15000"
+          />
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label>Interest rate % (optional)</Label>
-        <Input inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))} placeholder="9" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Monthly payment</Label>
+          <Input
+            inputMode="numeric"
+            value={payment}
+            onChange={(e) => setPayment(e.target.value.replace(/[^\d]/g, ""))}
+            placeholder="3000"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Interest %</Label>
+          <Input
+            inputMode="decimal"
+            value={rate}
+            onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))}
+            placeholder="9"
+          />
+        </div>
       </div>
       <DialogFooter>
         <Button type="submit" disabled={busy}>
@@ -526,9 +637,9 @@ function AddTransactionDialog() {
   const create = useServerFn(addTransaction);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
-  const [kind, setKind] = useState<"expense" | "income" | "saving">("expense");
+  const [type, setType] = useState<"expense" | "income">("expense");
   const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -538,16 +649,18 @@ function AddTransactionDialog() {
     try {
       await create({
         data: {
-          amount: Number(amount),
-          kind,
+          amount_kes: Number(amount),
+          type,
           category: category.trim() || null,
-          description: description.trim() || null,
+          note: note.trim() || null,
         },
       });
       queryClient.invalidateQueries({ queryKey: ["snapshot"] });
       toast.success("Logged");
       setOpen(false);
-      setAmount(""); setCategory(""); setDescription("");
+      setAmount("");
+      setCategory("");
+      setNote("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't add");
     } finally {
@@ -563,32 +676,49 @@ function AddTransactionDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Log activity</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Log activity</DialogTitle>
+        </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Type</Label>
-              <Select value={kind} onValueChange={(v) => setKind(v as typeof kind)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={type} onValueChange={(v) => setType(v as typeof type)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="expense">Expense</SelectItem>
                   <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="saving">Saving</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Amount (KES)</Label>
-              <Input inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} placeholder="500" autoFocus />
+              <Input
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
+                placeholder="500"
+                autoFocus
+              />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label>Category</Label>
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Transport" />
+            <Input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Transport"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Note</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Matatu home" />
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Matatu home"
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={busy}>
