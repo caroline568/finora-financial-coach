@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listThreads, createThread, deleteThread } from "@/lib/threads.functions";
-import { getMyProfile } from "@/lib/profile.functions";
+import { getMyProfile, getStreak } from "@/lib/profile.functions";
 import { AppShell } from "@/components/finora/app-shell";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Trash2, MessageCircle } from "lucide-react";
@@ -29,11 +29,13 @@ function ChatLayout() {
   }, []);
 
   const fetchProfile = useServerFn(getMyProfile);
+  const fetchStreak = useServerFn(getStreak);
   const fetchThreads = useServerFn(listThreads);
   const createT = useServerFn(createThread);
   const removeT = useServerFn(deleteThread);
 
   const profileQuery = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
+  const streakQuery = useQuery({ queryKey: ["streak"], queryFn: () => fetchStreak() });
   const threadsQuery = useQuery({ queryKey: ["threads"], queryFn: () => fetchThreads() });
 
   const createMut = useMutation({
@@ -60,7 +62,7 @@ function ChatLayout() {
   const profile = profileQuery.data?.profile;
 
   return (
-    <AppShell user={{ email: userEmail, name: profile?.name }} streak={profile?.current_streak}>
+    <AppShell user={{ email: userEmail, name: profile?.full_name ?? null }} streak={streakQuery.data?.current_streak}>
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-4 px-2 py-4 sm:px-6 sm:py-6 md:gap-6">
         <aside className="hidden w-64 shrink-0 flex-col gap-3 md:flex">
           <Button

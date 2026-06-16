@@ -1,6 +1,8 @@
 // Server-only: builds the Finora coach system prompt with a user's full
 // financial profile injected. This must NEVER be imported from client code.
 
+import type { FinanceContext } from "./finora-context.server";
+
 export const FINORA_BASE_PROMPT = `You are Finora — a personal money coach built for everyday Kenyans. You are not a bank, not a budgeting spreadsheet, not a generic financial advisor. You are the coach this person has never been able to afford — until now.
 
 You are warm like a trusted older sibling. Direct like a no-nonsense mentor. Calm like a professional advisor. Energetic like someone who genuinely believes in this person's potential. You hold all of these at once.
@@ -36,21 +38,6 @@ Before sending a response, ask yourself: "If this person reads this and feels bo
 
 You speak from knowing them, not from reading data. Never say "based on your data" or "according to your profile". You just know them.`;
 
-interface FinanceContext {
-  name: string | null;
-  monthly_income: number | null;
-  current_savings: number | null;
-  primary_goal: string | null;
-  goal_target_amount: number | null;
-  goal_current_amount: number | null;
-  top_spending_categories: string[] | null;
-  current_streak: number;
-  longest_streak: number;
-  bills: Array<{ title: string; amount: number; due_day: number; category: string | null }>;
-  debts: Array<{ title: string; balance: number; monthly_payment: number | null; interest_rate: number | null }>;
-  transactions: Array<{ amount: number; kind: string; category: string | null; description: string | null; occurred_at: string }>;
-}
-
 const kes = (n: number | null | undefined) =>
   n == null ? "unknown" : `KES ${Number(n).toLocaleString("en-KE", { maximumFractionDigits: 0 })}`;
 
@@ -60,7 +47,10 @@ export function buildFinoraSystemPrompt(ctx: FinanceContext): string {
 
   const billsLines = ctx.bills.length
     ? ctx.bills
-        .map((b) => `  - ${b.title}: ${kes(b.amount)} due day ${b.due_day} of month${b.category ? ` (${b.category})` : ""}`)
+        .map(
+          (b) =>
+            `  - ${b.name}: ${kes(b.amount_kes)} ${b.frequency} (due ${b.due_date})${b.is_paid ? " [paid]" : ""}`,
+        )
         .join("\n")
     : "  (none recorded)";
 
@@ -68,7 +58,7 @@ export function buildFinoraSystemPrompt(ctx: FinanceContext): string {
     ? ctx.debts
         .map(
           (d) =>
-            `  - ${d.title}: balance ${kes(d.balance)}${d.monthly_payment ? `, paying ${kes(d.monthly_payment)}/mo` : ""}${d.interest_rate ? ` @ ${d.interest_rate}%` : ""}`,
+            `  - ${d.name}: ${kes(d.remaining_kes)} remaining of ${kes(d.total_amount_kes)}${d.monthly_payment_kes ? `, paying ${kes(d.monthly_payment_kes)}/mo` : ""}${d.interest_rate ? ` @ ${d.interest_rate}%` : ""}`,
         )
         .join("\n")
     : "  (none recorded)";
@@ -78,24 +68,33 @@ export function buildFinoraSystemPrompt(ctx: FinanceContext): string {
         .slice(0, 20)
         .map(
           (t) =>
-            `  - ${t.occurred_at} ${t.kind}: ${kes(t.amount)}${t.category ? ` ${t.category}` : ""}${t.description ? ` — ${t.description}` : ""}`,
+            `  - ${t.transaction_date} ${t.type}: ${kes(t.amount_kes)}${t.category ? ` ${t.category}` : ""}${t.note ? ` — ${t.note}` : ""}`,
         )
         .join("\n")
     : "  (none recorded yet)";
 
-  const goalLine = ctx.primary_goal
-    ? `${ctx.primary_goal}${ctx.goal_target_amount ? ` — target ${kes(ctx.goal_target_amount)}, saved ${kes(ctx.goal_current_amount ?? 0)} (${Math.round(((ctx.goal_current_amount ?? 0) / (ctx.goal_target_amount || 1)) * 100)}%)` : ""}`
-    : "not set";
+  const goalsLines = ctx.goals.length
+    ? ctx.goals
+        .map(
+          (g) =>
+            `  - ${g.name}: ${kes(g.saved_so_far_kes)} of ${kes(g.target_amount_kes)} (${Math.round((g.saved_so_far_kes / Math.max(1, g.target_amount_kes)) * 100)}%)${g.target_date ? ` by ${g.target_date}` : ""}`,
+        )
+        .join("\n")
+    : "  (none set)";
 
   const profileBlock = `USER PROFILE (today is ${today}, day ${todayDay} of month):
-Name: ${ctx.name ?? "friend"}
-Monthly income: ${kes(ctx.monthly_income)}
-Current savings: ${kes(ctx.current_savings)}
-Primary goal: ${goalLine}
-Top spending categories: ${ctx.top_spending_categories?.length ? ctx.top_spending_categories.join(", ") : "unknown"}
+Name: ${ctx.full_name ?? "friend"}
+Monthly income: ${kes(ctx.monthly_income_kes)}
+Current savings: ${kes(ctx.current_savings_kes)}
+Active debts (self-reported total): ${kes(ctx.active_debts_kes)}
+Primary goal: ${ctx.primary_goal ?? "not set"}
+Top spending categories: ${ctx.spending_categories?.length ? ctx.spending_categories.join(", ") : "unknown"}
 Current streak: ${ctx.current_streak} days (longest ${ctx.longest_streak})
 
-Bills this month:
+Goals:
+${goalsLines}
+
+Bills:
 ${billsLines}
 
 Active debts:
@@ -109,7 +108,7 @@ ${txLines}`;
 
 export const DAILY_PRIORITY_INSTRUCTION = `Generate exactly ONE "Today's Priority" for this user. Reply with ONLY valid JSON, no markdown fence, matching this shape:
 {
-  "priority": "One clear sentence: the single most important money action to take today. Be specific with KES amounts when relevant.",
+  "recommendation": "One clear sentence: the single most important money action to take today. Be specific with KES amounts when relevant.",
   "reasoning": "One or two warm honest sentences explaining why this matters right now.",
   "goal_connection": "Optional: one sentence connecting this to their bigger goal, or null.",
   "encouragement": "One short personal energizing line. Not generic."
@@ -117,7 +116,7 @@ export const DAILY_PRIORITY_INSTRUCTION = `Generate exactly ONE "Today's Priorit
 Make it doable given their actual numbers. Acknowledge where they are. If month-end is tight, be practical. Use natural Swahili words occasionally where it fits.`;
 
 export type DailyPriorityJSON = {
-  priority: string;
+  recommendation: string;
   reasoning: string;
   goal_connection: string | null;
   encouragement: string;

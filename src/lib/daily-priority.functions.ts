@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -12,26 +13,31 @@ export const getOrGenerateDailyPriority = createServerFn({ method: "POST" })
       .from("daily_priorities")
       .select("*")
       .eq("user_id", context.userId)
-      .eq("for_date", today)
+      .eq("priority_date", today)
       .maybeSingle();
     if (existing) return { priority: existing, cached: true };
 
-    // Need profile to generate
     const { loadFinanceContext } = await import("./finora-context.server");
     const { buildFinoraSystemPrompt, DAILY_PRIORITY_INSTRUCTION } = await import("./finora-prompt.server");
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
 
     const ctx = await loadFinanceContext(context.supabase, context.userId);
-    if (!ctx.monthly_income && !ctx.bills.length && !ctx.debts.length && !ctx.current_savings) {
-      // Not enough info — return a friendly placeholder, don't cache
+    if (
+      !ctx.monthly_income_kes &&
+      !ctx.bills.length &&
+      !ctx.debts.length &&
+      !ctx.current_savings_kes
+    ) {
       return {
         priority: {
-          priority: "Tell me a little about your money so I can coach you well — your income, your goal, and any bills or debts on your mind.",
+          recommendation:
+            "Tell me a little about your money so I can coach you well — your income, your goal, and any bills or debts on your mind.",
           reasoning:
             "I need a basic picture before I can give you a priority that actually fits your life. Even rough numbers are enough to start.",
           goal_connection: null,
           encouragement: "Karibu. Let's start something good today.",
-          for_date: today,
+          priority_date: today,
+          is_done: false,
         },
         cached: false,
       };
@@ -51,7 +57,7 @@ export const getOrGenerateDailyPriority = createServerFn({ method: "POST" })
     });
 
     let parsed: {
-      priority: string;
+      recommendation: string;
       reasoning: string;
       goal_connection: string | null;
       encouragement: string;
@@ -61,7 +67,7 @@ export const getOrGenerateDailyPriority = createServerFn({ method: "POST" })
       parsed = JSON.parse(cleaned);
     } catch {
       parsed = {
-        priority: text.slice(0, 280),
+        recommendation: text.slice(0, 280),
         reasoning: "",
         goal_connection: null,
         encouragement: "",
@@ -72,8 +78,8 @@ export const getOrGenerateDailyPriority = createServerFn({ method: "POST" })
       .from("daily_priorities")
       .insert({
         user_id: context.userId,
-        for_date: today,
-        priority: parsed.priority,
+        priority_date: today,
+        recommendation: parsed.recommendation,
         reasoning: parsed.reasoning,
         goal_connection: parsed.goal_connection,
         encouragement: parsed.encouragement,
@@ -93,6 +99,24 @@ export const regenerateDailyPriority = createServerFn({ method: "POST" })
       .from("daily_priorities")
       .delete()
       .eq("user_id", context.userId)
-      .eq("for_date", today);
+      .eq("priority_date", today);
+    return { ok: true };
+  });
+
+export const markPriorityDone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z.object({ id: z.string().uuid(), is_done: z.boolean() }).parse(i),
+  )
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase
+      .from("daily_priorities")
+      .update({
+        is_done: data.is_done,
+        completed_at: data.is_done ? new Date().toISOString() : null,
+      })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
