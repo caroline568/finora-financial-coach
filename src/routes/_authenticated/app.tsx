@@ -234,7 +234,7 @@ function Dashboard() {
 
         {/* Goal progress */}
         {(topGoal || profile.primary_goal) && (
-          <section className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <section id="goal" className="mt-8 scroll-mt-24 rounded-2xl border border-border bg-card p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -268,7 +268,7 @@ function Dashboard() {
         )}
 
         {/* Money basics */}
-        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+        <section className="mt-8 grid gap-6 lg:grid-cols-2 scroll-mt-24" id="bills">
           <ListCard
             title="Bills"
             empty="No bills yet. Add the ones you pay every month."
@@ -285,7 +285,7 @@ function Dashboard() {
               },
             }))}
           />
-          <ListCard
+          <div id="debts" className="scroll-mt-24"><ListCard
             title="Debts"
             empty="No debts logged. If you have any, add them so we can plan a way out together."
             addLabel="Add debt"
@@ -300,11 +300,11 @@ function Dashboard() {
                 queryClient.invalidateQueries({ queryKey: ["snapshot"] });
               },
             }))}
-          />
+          /></div>
         </section>
 
         {/* Recent transactions */}
-        <section className="mt-8">
+        <section id="activity" className="mt-8 scroll-mt-24">
           <div className="mb-3 flex items-end justify-between">
             <div>
               <h2 className="font-display text-2xl font-semibold">Recent activity</h2>

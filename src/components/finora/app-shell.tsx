@@ -4,7 +4,7 @@ import { FinoraWordmark } from "./logo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, MessageCircle, LogOut, Flame } from "lucide-react";
+import { LayoutDashboard, MessageCircle, LogOut, Flame, Receipt, Target, ArrowLeftRight, Wallet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,7 +128,38 @@ export function AppShell({ children, user, streak }: AppShellProps) {
           })}
         </nav>
       </header>
+      <SecondaryNav />
       <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+
+function SecondaryNav() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/app") return null;
+  const items = [
+    { hash: "goal", label: "Goal", icon: Target },
+    { hash: "bills", label: "Bills", icon: Receipt },
+    { hash: "debts", label: "Debts", icon: Wallet },
+    { hash: "activity", label: "Activity", icon: ArrowLeftRight },
+  ];
+  return (
+    <div className="border-b border-border/60 bg-background/60">
+      <div className="mx-auto flex w-full max-w-6xl gap-1 overflow-x-auto px-3 py-2 sm:px-6">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <a
+              key={item.hash}
+              href={`#${item.hash}`}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {item.label}
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
