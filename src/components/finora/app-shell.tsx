@@ -1,10 +1,12 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { FinoraWordmark } from "./logo";
+import { FeedbackDialog } from "./feedback-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, MessageCircle, LogOut, Flame, Receipt, Target, ArrowLeftRight, Wallet } from "lucide-react";
+import { LayoutDashboard, MessageCircle, LogOut, Flame, Receipt, Target, ArrowLeftRight, Wallet, MessageSquarePlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +26,7 @@ export function AppShell({ children, user, streak }: AppShellProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const navItems = [
     { to: "/app", label: "Today", icon: LayoutDashboard },
@@ -43,8 +46,11 @@ export function AppShell({ children, user, streak }: AppShellProps) {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
-          <Link to="/app" className="shrink-0">
+          <Link to="/app" className="shrink-0 flex items-center gap-2">
             <FinoraWordmark />
+            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+              Beta
+            </span>
           </Link>
           <nav className="hidden gap-1 sm:flex">
             {navItems.map((item) => {
@@ -69,13 +75,22 @@ export function AppShell({ children, user, streak }: AppShellProps) {
               );
             })}
           </nav>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {typeof streak === "number" && streak > 0 && (
               <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent-foreground">
                 <Flame className="h-3.5 w-3.5 text-accent" />
                 {streak} day{streak === 1 ? "" : "s"}
               </div>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={() => setFeedbackOpen(true)}
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Feedback</span>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -96,6 +111,9 @@ export function AppShell({ children, user, streak }: AppShellProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
                   Edit my profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
+                  <MessageSquarePlus className="mr-2 h-4 w-4" /> Send feedback
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" /> Sign out
@@ -130,6 +148,7 @@ export function AppShell({ children, user, streak }: AppShellProps) {
       </header>
       <SecondaryNav />
       <main className="flex-1">{children}</main>
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   );
 }
