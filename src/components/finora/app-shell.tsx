@@ -46,8 +46,11 @@ export function AppShell({ children, user, streak }: AppShellProps) {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
-          <Link to="/app" className="shrink-0">
+          <Link to="/app" className="shrink-0 flex items-center gap-2">
             <FinoraWordmark />
+            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+              Beta
+            </span>
           </Link>
           <nav className="hidden gap-1 sm:flex">
             {navItems.map((item) => {
