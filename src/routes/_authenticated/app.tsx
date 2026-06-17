@@ -234,7 +234,7 @@ function Dashboard() {
 
         {/* Goal progress */}
         {(topGoal || profile.primary_goal) && (
-          <section className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <section id="goal" className="mt-8 scroll-mt-24 rounded-2xl border border-border bg-card p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
