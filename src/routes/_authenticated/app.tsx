@@ -304,7 +304,7 @@ function Dashboard() {
         </section>
 
         {/* Recent transactions */}
-        <section className="mt-8">
+        <section id="activity" className="mt-8 scroll-mt-24">
           <div className="mb-3 flex items-end justify-between">
             <div>
               <h2 className="font-display text-2xl font-semibold">Recent activity</h2>
