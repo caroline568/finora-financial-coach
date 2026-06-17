@@ -112,6 +112,9 @@ export function AppShell({ children, user, streak }: AppShellProps) {
                 <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
                   Edit my profile
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
+                  <MessageSquarePlus className="mr-2 h-4 w-4" /> Send feedback
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" /> Sign out
                 </DropdownMenuItem>
