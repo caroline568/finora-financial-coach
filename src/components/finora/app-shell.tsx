@@ -75,13 +75,22 @@ export function AppShell({ children, user, streak }: AppShellProps) {
               );
             })}
           </nav>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {typeof streak === "number" && streak > 0 && (
               <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-semibold text-accent-foreground">
                 <Flame className="h-3.5 w-3.5 text-accent" />
                 {streak} day{streak === 1 ? "" : "s"}
               </div>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={() => setFeedbackOpen(true)}
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Feedback</span>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
