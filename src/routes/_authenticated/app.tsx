@@ -285,7 +285,7 @@ function Dashboard() {
               },
             }))}
           />
-          <ListCard
+          <div id="debts" className="scroll-mt-24"><ListCard
             title="Debts"
             empty="No debts logged. If you have any, add them so we can plan a way out together."
             addLabel="Add debt"
