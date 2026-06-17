@@ -148,6 +148,7 @@ export function AppShell({ children, user, streak }: AppShellProps) {
       </header>
       <SecondaryNav />
       <main className="flex-1">{children}</main>
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   );
 }
