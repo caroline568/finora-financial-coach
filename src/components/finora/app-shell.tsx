@@ -4,7 +4,7 @@ import { FinoraWordmark } from "./logo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, MessageCircle, LogOut, Flame } from "lucide-react";
+import { LayoutDashboard, MessageCircle, LogOut, Flame, Receipt, Target, ArrowLeftRight, Wallet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
