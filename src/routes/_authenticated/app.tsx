@@ -300,7 +300,7 @@ function Dashboard() {
                 queryClient.invalidateQueries({ queryKey: ["snapshot"] });
               },
             }))}
-          />
+          /></div>
         </section>
 
         {/* Recent transactions */}
