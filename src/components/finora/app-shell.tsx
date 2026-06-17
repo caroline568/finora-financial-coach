@@ -26,6 +26,7 @@ export function AppShell({ children, user, streak }: AppShellProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const navItems = [
     { to: "/app", label: "Today", icon: LayoutDashboard },
