@@ -268,7 +268,7 @@ function Dashboard() {
         )}
 
         {/* Money basics */}
-        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+        <section className="mt-8 grid gap-6 lg:grid-cols-2 scroll-mt-24" id="bills">
           <ListCard
             title="Bills"
             empty="No bills yet. Add the ones you pay every month."
