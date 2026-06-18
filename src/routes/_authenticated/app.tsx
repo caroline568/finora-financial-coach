@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { MpesaCard } from "@/components/finora/mpesa-card";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Today — Finora" }] }),
@@ -365,6 +366,8 @@ function Dashboard() {
             )}
           </div>
         </section>
+
+        <MpesaCard />
       </div>
     </AppShell>
   );
