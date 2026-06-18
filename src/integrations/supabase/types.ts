@@ -230,6 +230,7 @@ export type Database = {
           current_savings_kes: number
           full_name: string | null
           id: string
+          ingest_token: string | null
           monthly_income_kes: number | null
           mpesa_phone: string | null
           onboarded: boolean
@@ -244,6 +245,7 @@ export type Database = {
           current_savings_kes?: number
           full_name?: string | null
           id: string
+          ingest_token?: string | null
           monthly_income_kes?: number | null
           mpesa_phone?: string | null
           onboarded?: boolean
@@ -258,6 +260,7 @@ export type Database = {
           current_savings_kes?: number
           full_name?: string | null
           id?: string
+          ingest_token?: string | null
           monthly_income_kes?: number | null
           mpesa_phone?: string | null
           onboarded?: boolean
@@ -319,10 +322,15 @@ export type Database = {
       transactions: {
         Row: {
           amount_kes: number
+          balance_kes: number | null
           category: string | null
+          counterparty: string | null
+          counterparty_phone: string | null
           created_at: string
           id: string
+          mpesa_code: string | null
           note: string | null
+          raw_sms: string | null
           source: string
           transaction_date: string
           type: string
@@ -330,10 +338,15 @@ export type Database = {
         }
         Insert: {
           amount_kes: number
+          balance_kes?: number | null
           category?: string | null
+          counterparty?: string | null
+          counterparty_phone?: string | null
           created_at?: string
           id?: string
+          mpesa_code?: string | null
           note?: string | null
+          raw_sms?: string | null
           source?: string
           transaction_date?: string
           type: string
@@ -341,10 +354,15 @@ export type Database = {
         }
         Update: {
           amount_kes?: number
+          balance_kes?: number | null
           category?: string | null
+          counterparty?: string | null
+          counterparty_phone?: string | null
           created_at?: string
           id?: string
+          mpesa_code?: string | null
           note?: string | null
+          raw_sms?: string | null
           source?: string
           transaction_date?: string
           type?: string
@@ -357,7 +375,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ingest_mpesa_transaction: {
+        Args: {
+          _amount_kes: number
+          _balance_kes: number
+          _category: string
+          _counterparty: string
+          _counterparty_phone: string
+          _mpesa_code: string
+          _note: string
+          _raw_sms: string
+          _token: string
+          _transaction_date: string
+          _type: string
+        }
+        Returns: string
+      }
+      rotate_ingest_token: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
