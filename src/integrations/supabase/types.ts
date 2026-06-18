@@ -328,8 +328,11 @@ export type Database = {
           counterparty_phone: string | null
           created_at: string
           id: string
+          last_prompted_at: string | null
           mpesa_code: string | null
           note: string | null
+          prompt_dismissed: boolean
+          prompt_snooze_count: number
           raw_sms: string | null
           source: string
           transaction_date: string
@@ -344,8 +347,11 @@ export type Database = {
           counterparty_phone?: string | null
           created_at?: string
           id?: string
+          last_prompted_at?: string | null
           mpesa_code?: string | null
           note?: string | null
+          prompt_dismissed?: boolean
+          prompt_snooze_count?: number
           raw_sms?: string | null
           source?: string
           transaction_date?: string
@@ -360,8 +366,11 @@ export type Database = {
           counterparty_phone?: string | null
           created_at?: string
           id?: string
+          last_prompted_at?: string | null
           mpesa_code?: string | null
           note?: string | null
+          prompt_dismissed?: boolean
+          prompt_snooze_count?: number
           raw_sms?: string | null
           source?: string
           transaction_date?: string
