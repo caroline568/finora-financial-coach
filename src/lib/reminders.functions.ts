@@ -59,12 +59,6 @@ export const completeTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => PatchInput.parse(i))
   .handler(async ({ context, data }) => {
-    const patch: Record<string, unknown> = {
-      last_prompted_at: new Date().toISOString(),
-    };
-    if (data.category) patch.category = data.category;
-    if (data.note) patch.note = data.note;
-    // If both are now filled, mark as resolved (dismissed) so we stop prompting.
     const { data: row, error: readErr } = await context.supabase
       .from("transactions")
       .select("category, note")
@@ -74,9 +68,17 @@ export const completeTransaction = createServerFn({ method: "POST" })
     if (readErr) throw new Error(readErr.message);
     const nextCat = data.category ?? row?.category ?? "";
     const nextNote = data.note ?? row?.note ?? "";
-    if (nextCat.trim() !== "" && nextNote.trim() !== "") {
-      patch.prompt_dismissed = true;
-    }
+    const resolved = nextCat.trim() !== "" && nextNote.trim() !== "";
+
+    const patch: {
+      last_prompted_at: string;
+      category?: string;
+      note?: string;
+      prompt_dismissed?: boolean;
+    } = { last_prompted_at: new Date().toISOString() };
+    if (data.category) patch.category = data.category;
+    if (data.note) patch.note = data.note;
+    if (resolved) patch.prompt_dismissed = true;
 
     const { error } = await context.supabase
       .from("transactions")
@@ -84,7 +86,7 @@ export const completeTransaction = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
-    return { ok: true, resolved: patch.prompt_dismissed === true };
+    return { ok: true, resolved };
   });
 
 export const snoozeTransactionPrompt = createServerFn({ method: "POST" })
