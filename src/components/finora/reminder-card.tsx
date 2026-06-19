@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BellRing, Check, Clock, X, Loader2 } from "lucide-react";
+import { BellRing, Check, Clock, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,7 @@ import {
   snoozeTransactionPrompt,
   dismissTransactionPrompt,
 } from "@/lib/reminders.functions";
+import { suggestTransactionValues } from "@/lib/suggest.functions";
 
 const CATEGORIES = [
   "Food",
