@@ -1,0 +1,25 @@
+{
+  "name": "Finora — your money coach",
+  "short_name": "Finora",
+  "description": "A warm, plain-spoken AI money coach for everyday Kenyan life.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0F5132",
+  "theme_color": "#0F5132",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
