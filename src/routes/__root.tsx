@@ -98,9 +98,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Pixel Perfect is a financial management application that helps users track savings, transactions, debt, and bills." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3d76b8fa-757e-4b59-bc5f-0d4f8fed30b8/id-preview-5d997fdf--eb0aa656-2e03-466c-8a15-c452151a78e8.lovable.app-1781677791314.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3d76b8fa-757e-4b59-bc5f-0d4f8fed30b8/id-preview-5d997fdf--eb0aa656-2e03-466c-8a15-c452151a78e8.lovable.app-1781677791314.png" },
+      { name: "theme-color", content: "#0F5132" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Finora" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/icon-512.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/icon-512.png" },
       {
         rel: "preconnect",
         href: "https://fonts.googleapis.com",
