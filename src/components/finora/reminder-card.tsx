@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BellRing, Check, Clock, X, Loader2 } from "lucide-react";
+import { BellRing, Check, Clock, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,7 @@ import {
   snoozeTransactionPrompt,
   dismissTransactionPrompt,
 } from "@/lib/reminders.functions";
+import { suggestTransactionValues } from "@/lib/suggest.functions";
 
 const CATEGORIES = [
   "Food",
@@ -175,6 +176,27 @@ function ReminderRow({
     return tx.type === "income" ? "Money in" : "Money out";
   }, [tx]);
 
+  const [suggesting, setSuggesting] = useState(false);
+  const suggestFn = useServerFn(suggestTransactionValues);
+
+  async function handleSuggest() {
+    setSuggesting(true);
+    try {
+      const s = await suggestFn({ data: { id: tx.id } });
+      if (needsCat && s.category) setCat(s.category);
+      if (needsNote && s.note) setNote(s.note);
+      toast.success(
+        s.confidence === "high"
+          ? "Suggested — looks confident."
+          : "Suggested — double-check before saving.",
+      );
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
   const canSave =
     (needsCat ? cat.trim().length > 0 : true) &&
     (needsNote ? note.trim().length > 0 : true) &&
@@ -223,6 +245,21 @@ function ReminderRow({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSuggest}
+          disabled={busy || suggesting}
+          title="Let the coach propose values from the M-Pesa details"
+          className="mr-auto"
+        >
+          {suggesting ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5" />
+          )}
+          Suggest values
+        </Button>
         <Button
           variant="ghost"
           size="sm"
