@@ -282,7 +282,7 @@ function Onboarding() {
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
                 className="rounded-full"
-                disabled={current === "name" && name.trim().length === 0}
+                disabled={current === "income" && income.trim().length === 0}
               >
                 Continue
                 <ArrowRight className="h-4 w-4" />
