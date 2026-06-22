@@ -131,33 +131,22 @@ function Onboarding() {
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-7 shadow-sm">
-          {current === "intro" && (
-            <div>
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <h1 className="mt-5 font-display text-3xl font-semibold leading-tight">
-                Karibu. Let's get to know each other.
-              </h1>
-              <p className="mt-3 text-muted-foreground">
-                A few quick questions so I can actually be useful — not generic. Rough numbers
-                are fine. You can change everything later.
-              </p>
-            </div>
-          )}
-
-          {current === "name" && (
+          {current === "income" && (
             <div>
               <h1 className="font-display text-3xl font-semibold leading-tight">
-                What should I call you?
+                {data?.profile?.full_name ? `Karibu, ${data.profile.full_name.split(" ")[0]}.` : "Karibu."} Roughly, how much do you earn in a month?
               </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Salary, side hustles, casual — add it all up. An average is fine.
+              </p>
               <div className="mt-6 space-y-1.5">
-                <Label htmlFor="name">First name</Label>
+                <Label htmlFor="income">Monthly income (KES)</Label>
                 <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Wanjiku"
+                  id="income"
+                  inputMode="numeric"
+                  value={income}
+                  onChange={(e) => setIncome(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder="35000"
                   autoFocus
                 />
               </div>
