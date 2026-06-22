@@ -42,30 +42,58 @@ function AuthPage() {
     });
   }, [navigate]);
 
+  function friendlyError(msg: string): string {
+    const m = msg.toLowerCase();
+    if (m.includes("invalid login") || m.includes("invalid credentials"))
+      return "That email and password don't match. Try again or create an account.";
+    if (m.includes("already registered") || m.includes("already been registered") || m.includes("user already"))
+      return "You already have an account — sign in instead.";
+    if (m.includes("email not confirmed"))
+      return "Please confirm your email first, then sign in.";
+    if (m.includes("password") && m.includes("pwned"))
+      return "That password has been found in a data breach. Please choose a different one.";
+    if (m.includes("password") && m.includes("6"))
+      return "Password must be at least 8 characters.";
+    if (m.includes("rate limit") || m.includes("too many"))
+      return "Too many attempts — wait a moment and try again.";
+    if (m.includes("network") || m.includes("fetch"))
+      return "Network hiccup. Check your connection and try again.";
+    return msg;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
           password,
           options: {
-            data: { name: name.trim() || email.split("@")[0] },
+            data: { full_name: name.trim() || email.split("@")[0] },
             emailRedirectTo: window.location.origin + "/app",
           },
         });
         if (error) throw error;
+        if (!data.session) {
+          toast.success("Check your email to confirm your account, then sign in.");
+          setMode("signin");
+          setPassword("");
+          return;
+        }
         toast.success("Karibu! Let's set you up.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
         if (error) throw error;
         toast.success("Sawa, welcome back.");
       }
       navigate({ to: "/app", replace: true });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-      toast.error(message);
+      const raw = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(friendlyError(raw));
     } finally {
       setLoading(false);
     }
@@ -78,11 +106,13 @@ function AuthPage() {
         redirect_uri: window.location.origin + "/app",
       });
       if (result.error) {
-        toast.error(result.error.message || "Sign in failed");
+        toast.error(friendlyError(result.error.message || "Google sign-in failed"));
         return;
       }
       if (result.redirected) return;
       navigate({ to: "/app", replace: true });
+    } catch (err) {
+      toast.error(friendlyError(err instanceof Error ? err.message : "Google sign-in failed"));
     } finally {
       setOauthLoading(false);
     }
