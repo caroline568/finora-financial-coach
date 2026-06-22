@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FinoraWordmark } from "@/components/finora/logo";
-import { Loader2, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   component: Onboarding,
 });
 
-const STEPS = ["intro", "name", "income", "savings", "goal", "spending"] as const;
+const STEPS = ["income", "savings", "goal", "spending"] as const;
 
 const CATEGORIES = [
   "Food & groceries",
