@@ -109,7 +109,7 @@ ${txLines}`;
 export const DAILY_PRIORITY_INSTRUCTION = `Generate exactly ONE "Today's Priority" for this user. Reply with ONLY valid JSON, no markdown fence, matching this shape:
 {
   "recommendation": "One clear sentence: the single most important money action to take today. Be specific with KES amounts when relevant.",
-  "reasoning": "One or two warm honest sentences explaining why this matters right now.",
+  "reasoning": "Two short bullet-style sentences explaining why this is the right move now — reference their actual numbers (bills covered, savings thin, debt heavy, etc.). The user will see this under the label 'Why I'm suggesting this'.",
   "goal_connection": "Optional: one sentence connecting this to their bigger goal, or null.",
   "encouragement": "One short personal energizing line. Not generic."
 }
