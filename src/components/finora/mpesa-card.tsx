@@ -60,23 +60,25 @@ export function MpesaCard() {
   };
 
   return (
-    <section className="mt-8">
-      <div className="rounded-2xl border border-border bg-card p-5">
+    <section>
+      <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10 p-5">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex w-full items-start gap-3 text-left"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <Smartphone className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <h3 className="font-display text-lg font-semibold">
-              Auto-import M-Pesa SMS
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              Save time
+            </div>
+            <h3 className="mt-1 font-display text-lg font-semibold">
+              Stop typing. Forward your M-Pesa messages and Finora tracks it for you.
             </h3>
             <p className="text-sm text-muted-foreground">
-              Stop typing every transaction. Forward your M-Pesa confirmation
-              messages and Finora logs them for you.
+              Paste an SMS or set up auto-forward — your activity stays current with zero effort.
             </p>
           </div>
           {open ? (
@@ -85,6 +87,7 @@ export function MpesaCard() {
             <ChevronDown className="mt-2 h-5 w-5 text-muted-foreground" />
           )}
         </button>
+
 
         {open && (
           <div className="mt-5 space-y-5 border-t border-border pt-5">

@@ -70,7 +70,10 @@ function Landing() {
               </Button>
             </Link>
           </div>
-          <p className="mt-5 text-sm text-muted-foreground">
+          <p className="mt-3 text-sm font-medium text-foreground/80">
+            Free during beta. No credit card needed.
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
             No bank connection. No spreadsheet. Just a coach in your corner.
           </p>
         </div>
@@ -83,6 +86,36 @@ function Landing() {
             height={1100}
             className="aspect-[4/3] w-full rounded-3xl object-cover shadow-2xl ring-1 ring-black/5"
           />
+          {/* Phone mockup preview of the coach card */}
+          <div className="absolute -bottom-8 -right-2 hidden w-[230px] rotate-3 rounded-[2rem] border-[10px] border-foreground bg-foreground p-0 shadow-2xl sm:block lg:-right-6 lg:w-[260px]">
+            <div className="rounded-[1.25rem] bg-paper p-4">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>9:41</span>
+                <span className="font-semibold text-foreground">Finora</span>
+              </div>
+              <div className="mt-3 rounded-2xl bg-primary p-3 text-primary-foreground">
+                <div className="inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[9px] font-medium">
+                  <Sparkles className="h-2.5 w-2.5" /> A message from Coach
+                </div>
+                <p className="mt-2 text-[13px] font-medium leading-snug">
+                  Habari, Caroline. Set aside KES 500 today before any extras.
+                </p>
+                <p className="mt-2 text-[10px] text-primary-foreground/80">
+                  Why: bills covered, emergency fund still thin.
+                </p>
+              </div>
+              <div className="mt-3 flex gap-2 text-[10px] text-muted-foreground">
+                <div className="flex-1 rounded-lg border border-border bg-card px-2 py-1.5">
+                  <div className="font-semibold text-foreground">KES 35k</div>
+                  <div>Income</div>
+                </div>
+                <div className="flex-1 rounded-lg border border-border bg-card px-2 py-1.5">
+                  <div className="font-semibold text-foreground">3 day</div>
+                  <div>Streak</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
