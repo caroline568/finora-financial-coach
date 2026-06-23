@@ -192,7 +192,7 @@ function Onboarding() {
                     id="goal"
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
-                    placeholder="Build a 3-month emergency fund"
+                    placeholder="e.g. Clear my loan, save for school fees, stop borrowing from friends..."
                     autoFocus
                   />
                 </div>
