@@ -56,7 +56,7 @@ function Onboarding() {
   const [categories, setCategories] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [introShown, setIntroShown] = useState(false);
-  const [priority, setPriority] = useState<{ recommendation?: string; reasoning?: string; encouragement?: string; goal_connection?: string } | null>(null);
+  const [priority, setPriority] = useState<{ recommendation?: string | null; reasoning?: string | null; encouragement?: string | null; goal_connection?: string | null } | null>(null);
 
   useEffect(() => {
     if (data?.profile) {
