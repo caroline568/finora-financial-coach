@@ -408,9 +408,29 @@ function Dashboard() {
         </section>
 
         <ReminderCard />
-        <MpesaCard />
       </div>
     </AppShell>
+  );
+}
+
+function ChecklistItem({ done, label, anchor }: { done: boolean; label: string; anchor?: string }) {
+  const content = (
+    <span className={done ? "text-muted-foreground line-through" : "text-foreground"}>{label}</span>
+  );
+  return (
+    <li className="flex items-center gap-3">
+      <span
+        className={`grid h-5 w-5 place-items-center rounded-md border ${done ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}
+        aria-hidden
+      >
+        {done ? "✓" : ""}
+      </span>
+      {anchor && !done ? (
+        <a href={anchor} className="hover:underline">{content}</a>
+      ) : (
+        content
+      )}
+    </li>
   );
 }
 
