@@ -6,7 +6,7 @@ import { FeedbackDialog } from "./feedback-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, MessageCircle, LogOut, Flame, Receipt, Target, ArrowLeftRight, Wallet, MessageSquarePlus } from "lucide-react";
+import { LayoutDashboard, MessageCircle, LogOut, Flame, MessageSquarePlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
