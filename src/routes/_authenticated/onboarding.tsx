@@ -37,9 +37,11 @@ const CATEGORIES = [
 
 function Onboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const fetchProfile = useServerFn(getMyProfile);
   const saveProfile = useServerFn(updateMyProfile);
   const createGoal = useServerFn(addGoal);
+  const fetchPriority = useServerFn(getOrGenerateDailyPriority);
   const { data, isLoading } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
@@ -53,6 +55,8 @@ function Onboarding() {
   const [goalTarget, setGoalTarget] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [introShown, setIntroShown] = useState(false);
+  const [priority, setPriority] = useState<{ recommendation?: string; reasoning?: string; encouragement?: string; goal_connection?: string } | null>(null);
 
   useEffect(() => {
     if (data?.profile) {
