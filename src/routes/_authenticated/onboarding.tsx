@@ -352,3 +352,10 @@ function Onboarding() {
     </div>
   );
 }
+
+function greetingForHour() {
+  const h = new Date().getHours();
+  if (h < 12) return "Habari ya asubuhi";
+  if (h < 17) return "Habari ya mchana";
+  return "Habari ya jioni";
+}
