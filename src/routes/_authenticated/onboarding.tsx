@@ -153,27 +153,6 @@ function Onboarding() {
             </div>
           )}
 
-          {current === "income" && (
-            <div>
-              <h1 className="font-display text-3xl font-semibold leading-tight">
-                Roughly, how much do you earn in a month?
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Salary, side hustles, casual — add it all up. An average is fine.
-              </p>
-              <div className="mt-6 space-y-1.5">
-                <Label htmlFor="income">Monthly income (KES)</Label>
-                <Input
-                  id="income"
-                  inputMode="numeric"
-                  value={income}
-                  onChange={(e) => setIncome(e.target.value.replace(/[^\d]/g, ""))}
-                  placeholder="35000"
-                  autoFocus
-                />
-              </div>
-            </div>
-          )}
 
           {current === "savings" && (
             <div>
