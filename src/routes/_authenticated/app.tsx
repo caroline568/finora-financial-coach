@@ -142,23 +142,34 @@ function Dashboard() {
   const firstName = (profile.full_name || "friend").trim().split(/\s+/)[0];
   const currentStreak = streakQuery.data?.current_streak ?? 0;
 
+  const hasBills = bills.length > 0;
+  const hasTx = transactions.length > 0;
+  const hasGoal = Boolean(topGoal || profile.primary_goal);
+  const dayLabel = currentStreak > 0 ? `Day ${currentStreak} of your streak` : "Day 1 — let's build this";
+  const weekday = new Date().toLocaleDateString("en-KE", { weekday: "long" });
+
   return (
     <AppShell user={{ email: userEmail, name: profile.full_name }} streak={currentStreak}>
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mb-8">
+        <div className="mb-6">
           <p className="text-sm text-muted-foreground">{greeting()}, {firstName}.</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-            Today's priority
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+            A message from Finora Coach
           </h1>
         </div>
 
-        {/* Daily Priority Card */}
-        <section className="relative overflow-hidden rounded-3xl bg-primary p-7 text-primary-foreground shadow-xl sm:p-10">
+        {/* Coach message card */}
+        <section className="relative overflow-hidden rounded-3xl border-2 border-primary/20 bg-primary p-7 text-primary-foreground shadow-xl sm:p-10">
           <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-accent/30 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-accent/10 blur-3xl" />
           <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-3 py-1 text-xs font-medium">
-              <Sparkles className="h-3.5 w-3.5" /> One move today
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-medium">
+                <Sparkles className="h-3.5 w-3.5" /> Finora Coach's advice today
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1 text-[11px] text-primary-foreground/85">
+                {weekday} · {dayLabel}
+              </div>
             </div>
             {priorityQuery.isLoading || regenMutation.isPending ? (
               <div className="mt-6 flex items-center gap-3 text-primary-foreground/80">
@@ -171,9 +182,10 @@ function Dashboard() {
                   {priorityQuery.data.priority.recommendation}
                 </p>
                 {priorityQuery.data.priority.reasoning && (
-                  <p className="mt-4 text-primary-foreground/85 text-pretty">
-                    {priorityQuery.data.priority.reasoning}
-                  </p>
+                  <div className="mt-5 rounded-2xl bg-primary-foreground/10 p-4 text-sm text-primary-foreground/95">
+                    <p className="font-semibold mb-1">Why I'm suggesting this:</p>
+                    <p className="text-pretty">{priorityQuery.data.priority.reasoning}</p>
+                  </div>
                 )}
                 {priorityQuery.data.priority.goal_connection && (
                   <p className="mt-3 text-sm text-accent">
@@ -205,7 +217,28 @@ function Dashboard() {
             ) : (
               <p className="mt-6 text-primary-foreground/80">Loading your priority...</p>
             )}
+            <p className="mt-6 text-[11px] text-primary-foreground/70">
+              Recommendations are based on the details you provide. Your data belongs to you.
+            </p>
           </div>
+        </section>
+
+        {/* Day-1 starter checklist — only if not fully set up */}
+        {(!hasBills || !hasTx) && (
+          <section className="mt-8 rounded-2xl border border-border bg-card p-6">
+            <h2 className="font-display text-lg font-semibold">Get the most from your coach</h2>
+            <p className="mt-1 text-sm text-muted-foreground">A couple of small steps so I can give sharper advice tomorrow.</p>
+            <ul className="mt-4 space-y-2 text-sm">
+              <ChecklistItem done={hasGoal} label="Set your goal" />
+              <ChecklistItem done={hasBills} label="Add your first bill" anchor="#bills" />
+              <ChecklistItem done={hasTx} label="Log one transaction" anchor="#activity" />
+            </ul>
+          </section>
+        )}
+
+        {/* M-Pesa auto-import — promoted */}
+        <section className="mt-8">
+          <MpesaCard />
         </section>
 
         {/* Snapshot tiles */}
@@ -253,12 +286,18 @@ function Dashboard() {
                 ) : null}
               </div>
               {goalProgress !== null && (
-                <div className="text-3xl font-display font-semibold text-primary">
-                  {goalProgress}%
+                <div className="text-right">
+                  {goalProgress > 0 ? (
+                    <div className="text-3xl font-display font-semibold text-primary">{goalProgress}%</div>
+                  ) : (
+                    <div className="rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold text-accent-foreground">
+                      Day 1 — let's build this
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            {goalProgress !== null && (
+            {goalProgress !== null && goalProgress > 0 && (
               <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
