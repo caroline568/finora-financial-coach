@@ -128,13 +128,13 @@ function ChatWindow({
                   )}
                   <div
                     className={cn(
-                      "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
+                      "max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground"
+                        ? "whitespace-pre-wrap bg-primary text-primary-foreground"
                         : "bg-secondary text-foreground",
                     )}
                   >
-                    {text}
+                    {m.role === "assistant" ? <CoachMessage text={text} /> : text}
                   </div>
                 </li>
               );
