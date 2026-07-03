@@ -50,9 +50,9 @@ export const Route = createFileRoute("/api/chat")({
 
         // Build system prompt with user context
         const { loadFinanceContext } = await import("@/lib/finora-context.server");
-        const { buildFinoraSystemPrompt } = await import("@/lib/finora-prompt.server");
+        const { buildFinoraSystemPrompt, CHAT_REPLY_FORMAT_INSTRUCTION } = await import("@/lib/finora-prompt.server");
         const ctx = await loadFinanceContext(supabase, userId);
-        const system = buildFinoraSystemPrompt(ctx);
+        const system = `${buildFinoraSystemPrompt(ctx)}\n\n---\n\n${CHAT_REPLY_FORMAT_INSTRUCTION}`;
 
         // Persist user message (the last one) before streaming
         const lastUser = messages.filter((m) => m.role === "user").at(-1);

@@ -128,13 +128,13 @@ function ChatWindow({
                   )}
                   <div
                     className={cn(
-                      "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
+                      "max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground"
+                        ? "whitespace-pre-wrap bg-primary text-primary-foreground"
                         : "bg-secondary text-foreground",
                     )}
                   >
-                    {text}
+                    {m.role === "assistant" ? <CoachMessage text={text} /> : text}
                   </div>
                 </li>
               );
@@ -186,6 +186,35 @@ function ChatWindow({
           </Button>
         </div>
       </form>
+    </div>
+  );
+}
+
+// Renders assistant text with **Bold** segments and preserves line breaks.
+// Kept intentionally minimal — the model uses only **Label:** style bolding
+// under the CHAT_REPLY_FORMAT_INSTRUCTION contract.
+function CoachMessage({ text }: { text: string }) {
+  const lines = text.split(/\n/);
+  return (
+    <div className="space-y-2">
+      {lines.map((line, i) => {
+        if (line.trim() === "") return <div key={i} className="h-1" />;
+        const parts = line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+        return (
+          <p key={i} className="whitespace-pre-wrap">
+            {parts.map((seg, j) => {
+              if (seg.startsWith("**") && seg.endsWith("**")) {
+                return (
+                  <strong key={j} className="font-semibold text-foreground">
+                    {seg.slice(2, -2)}
+                  </strong>
+                );
+              }
+              return <span key={j}>{seg}</span>;
+            })}
+          </p>
+        );
+      })}
     </div>
   );
 }
