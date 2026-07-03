@@ -71,7 +71,7 @@ function Landing() {
             </Link>
           </div>
           <p className="mt-3 text-sm font-medium text-foreground/80">
-            Free during beta. No credit card needed.
+            Free to start. No credit card needed.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             No bank connection. No spreadsheet. Just a coach in your corner.
