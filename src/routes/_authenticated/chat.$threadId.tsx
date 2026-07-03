@@ -189,3 +189,32 @@ function ChatWindow({
     </div>
   );
 }
+
+// Renders assistant text with **Bold** segments and preserves line breaks.
+// Kept intentionally minimal — the model uses only **Label:** style bolding
+// under the CHAT_REPLY_FORMAT_INSTRUCTION contract.
+function CoachMessage({ text }: { text: string }) {
+  const lines = text.split(/\n/);
+  return (
+    <div className="space-y-2">
+      {lines.map((line, i) => {
+        if (line.trim() === "") return <div key={i} className="h-1" />;
+        const parts = line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+        return (
+          <p key={i} className="whitespace-pre-wrap">
+            {parts.map((seg, j) => {
+              if (seg.startsWith("**") && seg.endsWith("**")) {
+                return (
+                  <strong key={j} className="font-semibold text-foreground">
+                    {seg.slice(2, -2)}
+                  </strong>
+                );
+              }
+              return <span key={j}>{seg}</span>;
+            })}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
