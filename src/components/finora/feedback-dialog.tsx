@@ -82,8 +82,8 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Send feedback</DialogTitle>
           <DialogDescription>
-            You're on the beta. Tell us what's working, what's broken, or what
-            would make Finora more useful for you.
+            Tell us what's working, what's broken, or what would make Finora
+            more useful for you.
           </DialogDescription>
         </DialogHeader>
 
