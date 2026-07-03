@@ -11,7 +11,8 @@ import {
   OpenaiMessage
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Leaf, Plus, Send, Menu, X } from "lucide-react";
+import { Plus, Send, Menu, X } from "lucide-react";
+import finoraLogo from "@/assets/finora-logo.png";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -197,7 +198,7 @@ export default function Chat() {
             onClick={() => setLocation("/")} 
             className="flex items-center gap-2 text-primary font-display font-bold text-xl hover:opacity-80 transition-opacity"
           >
-            <Leaf className="w-6 h-6" />
+            <img src={finoraLogo} alt="Finora" className="w-7 h-7 object-contain" />
             Finora
           </button>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
@@ -322,7 +323,7 @@ export default function Chat() {
                 `}>
                   {msg.role === "assistant" && (
                     <div className="flex items-center gap-2 mb-3 text-primary">
-                      <Leaf className="w-4 h-4" />
+                      <img src={finoraLogo} alt="" className="w-4 h-4 object-contain" />
                       <span className="font-semibold text-sm">Finora</span>
                     </div>
                   )}
