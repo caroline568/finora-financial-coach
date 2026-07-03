@@ -28,9 +28,10 @@ export function AppShell({ children, user, streak }: AppShellProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
+  // Coach is the primary experience; the money plan is a support surface.
   const navItems = [
-    { to: "/app", label: "Today", icon: LayoutDashboard },
     { to: "/chat", label: "Coach", icon: MessageCircle },
+    { to: "/app", label: "My money", icon: LayoutDashboard },
   ];
 
   const initial = (user.name || user.email || "?").trim().charAt(0).toUpperCase();
@@ -46,7 +47,7 @@ export function AppShell({ children, user, streak }: AppShellProps) {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
-          <Link to="/app" className="shrink-0 flex items-center gap-2">
+          <Link to="/chat" className="shrink-0 flex items-center gap-2">
             <FinoraWordmark />
           </Link>
           <nav className="hidden gap-1 sm:flex">
