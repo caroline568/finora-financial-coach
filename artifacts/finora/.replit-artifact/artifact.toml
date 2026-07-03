@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Finora — AI Financial Coach"
+version = "1.0.0"
+id = "artifacts/finora"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18378
+
+[services.development]
+run = "pnpm --filter @workspace/finora run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/finora", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/finora/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18378"
+BASE_PATH = "/"
