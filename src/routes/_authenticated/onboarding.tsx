@@ -173,7 +173,7 @@ function Onboarding() {
                 variant="secondary"
                 className="mt-8 w-full rounded-full"
                 disabled={saving}
-                onClick={() => navigate({ to: "/app", replace: true })}
+                onClick={() => navigate({ to: "/chat", replace: true })}
               >
                 Asante, coach. Let's go.
                 <ArrowRight className="h-4 w-4" />

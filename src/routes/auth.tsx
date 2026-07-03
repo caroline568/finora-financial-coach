@@ -38,7 +38,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/app", replace: true });
+      if (data.session) navigate({ to: "/chat", replace: true });
     });
   }, [navigate]);
 
@@ -71,7 +71,7 @@ function AuthPage() {
           password,
           options: {
             data: { full_name: name.trim() || email.split("@")[0] },
-            emailRedirectTo: window.location.origin + "/app",
+            emailRedirectTo: window.location.origin + "/chat",
           },
         });
         if (error) throw error;
@@ -90,7 +90,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Sawa, welcome back.");
       }
-      navigate({ to: "/app", replace: true });
+      navigate({ to: "/chat", replace: true });
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Something went wrong";
       toast.error(friendlyError(raw));
@@ -103,14 +103,14 @@ function AuthPage() {
     setOauthLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/app",
+        redirect_uri: window.location.origin + "/chat",
       });
       if (result.error) {
         toast.error(friendlyError(result.error.message || "Google sign-in failed"));
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/app", replace: true });
+      navigate({ to: "/chat", replace: true });
     } catch (err) {
       toast.error(friendlyError(err instanceof Error ? err.message : "Google sign-in failed"));
     } finally {
