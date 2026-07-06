@@ -2,7 +2,7 @@ import { Router } from "express";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { db } from "@workspace/db";
-import { conversations, messages } from "@workspace/db";
+import { conversations, messages, payments } from "@workspace/db";
 import {
   SendOpenaiMessageBody,
   GetOpenaiConversationParams,
@@ -31,7 +31,7 @@ You help users make better daily money decisions in a simple, relatable, and str
 You are:
 - A personal AI financial coach
 - Focused on real-life financial improvement
-- Built for everyday users (especially Kenya and similar economies)
+- Built for everyday Kenyans: boda riders, mama mbogas, students, drivers, casual workers, people earning low or irregular income
 - Practical, structured, and habit-focused
 - Calm, non-judgmental, and consistent
 
@@ -40,6 +40,31 @@ You are NOT:
 - A licensed financial planner
 - A motivational speaker
 - A generic AI assistant
+
+## PRICING PHILOSOPHY (for when users ask about upgrading or cost)
+
+Think like everyday Kenyan spending — NOT like a SaaS company.
+
+Frame all pricing in terms users already understand:
+- Airtime top-ups: KSh 10, 20, 50, 100
+- Data bundles: daily or weekly, small top-ups
+- Transport fare: matatu, boda
+- Daily survival spending
+
+Pricing tiers:
+- Daily Pro: KSh 10 (less than a boda fare)
+- Weekly Pro: KSh 50 (less than lunch for a day)
+- Monthly Pro: KSh 199/month (less than one cup of tea a day)
+
+Always frame cost in daily terms. Example: "KSh 199 a month is less than KSh 7 a day — cheaper than a cup of tea."
+
+Key rules when discussing pricing:
+1. Always mention free tier first — Free gives real useful coaching.
+2. Only suggest upgrading AFTER showing clear value (savings found, plan created).
+3. Use airtime logic: "Pay only when you need it, like buying bundles."
+4. Respect income variability: users may not have stable income. Daily and weekly options exist for this reason.
+5. Never use enterprise/SaaS language. Never push expensive positioning.
+6. Payment is via M-Pesa — as easy as sending money. No card needed.
 
 ## FREE PLAN RULES
 
@@ -135,6 +160,30 @@ router.post("/conversations", async (req, res) => {
   const { title } = parsed.data as { title: string; plan?: string };
   const rawPlan = (parsed.data as { plan?: string }).plan;
   const plan = rawPlan && ALLOWED_PLANS.has(rawPlan) ? rawPlan : "FREE";
+
+  // For PRO conversations, require a completed M-Pesa payment
+  if (plan === "PRO") {
+    const checkoutRequestId = (req.body as { checkoutRequestId?: string }).checkoutRequestId;
+    if (!checkoutRequestId) {
+      res.status(402).json({ error: "A valid M-Pesa payment is required to start a Pro session." });
+      return;
+    }
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.checkoutRequestId, checkoutRequestId));
+    if (!payment || payment.status !== "completed") {
+      res.status(402).json({ error: "Payment not confirmed. Please complete your M-Pesa payment first." });
+      return;
+    }
+    if (payment.used) {
+      res.status(409).json({ error: "This payment has already been used. Please make a new payment." });
+      return;
+    }
+    // Mark the payment as used
+    await db.update(payments).set({ used: true }).where(eq(payments.checkoutRequestId, checkoutRequestId));
+  }
+
   const [row] = await db
     .insert(conversations)
     .values({ title, plan })

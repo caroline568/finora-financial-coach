@@ -1,20 +1,52 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Check, Sparkles, ArrowRight, ShieldCheck, TrendingUp, MessageCircle } from "lucide-react";
+import { Check, Sparkles, ArrowRight, ShieldCheck, TrendingUp, MessageCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreateOpenaiConversation } from "@workspace/api-client-react";
 import finoraLogo from "@/assets/finora-logo.png";
 import heroImage from "@/assets/hero-kenyan.jpg";
+import { MpesaModal } from "@/components/mpesa-modal";
+
+type Duration = "daily" | "weekly" | "monthly";
+
+const PRO_DURATIONS: { key: Duration; label: string; amount: number; period: string; tagline: string }[] = [
+  { key: "daily",   label: "Day pass",    amount: 10,  period: "24 hours",  tagline: "Less than a boda fare" },
+  { key: "weekly",  label: "Week pass",   amount: 50,  period: "7 days",    tagline: "Less than lunch money" },
+  { key: "monthly", label: "Month pass",  amount: 199, period: "30 days",   tagline: "Under KSh 7 a day" },
+];
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<"FREE" | "PRO">("FREE");
+  const [selectedDuration, setSelectedDuration] = useState<Duration>("weekly");
+  const [showMpesa, setShowMpesa] = useState(false);
   const createConversation = useCreateOpenaiConversation();
 
+  const activeDuration = PRO_DURATIONS.find((d) => d.key === selectedDuration)!;
+
   const handleStart = () => {
+    if (selectedPlan === "PRO") {
+      setShowMpesa(true);
+      return;
+    }
     createConversation.mutate(
-      { data: { title: "New Conversation", plan: selectedPlan } },
-      { onSuccess: (conversation) => setLocation(`/chat?id=${conversation.id}`) }
+      { data: { title: "New Conversation", plan: "FREE" } },
+      { onSuccess: (conv) => setLocation(`/chat?id=${conv.id}`) }
+    );
+  };
+
+  const handlePaid = (checkoutRequestId: string) => {
+    setShowMpesa(false);
+    createConversation.mutate(
+      {
+        data: {
+          title: "New Conversation",
+          plan: "PRO",
+          // @ts-expect-error — extra field passed through for payment verification
+          checkoutRequestId,
+        },
+      },
+      { onSuccess: (conv) => setLocation(`/chat?id=${conv.id}`) }
     );
   };
 
@@ -51,8 +83,7 @@ export default function Home() {
                 <span className="text-primary relative">
                   money coach
                   <span className="absolute -bottom-1 left-0 w-full h-1.5 bg-accent rounded-full opacity-70" />
-                </span>
-                , bro.
+                </span>.
               </h1>
               <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
                 Whether you're living paycheck to paycheck, drowning in loans, or just trying to
@@ -89,7 +120,7 @@ export default function Home() {
                 )}
               </Button>
               <p className="flex items-center text-sm text-muted-foreground sm:self-center">
-                No card needed. No complicated sign-up.
+                No card needed. No sign-up.
               </p>
             </div>
           </div>
@@ -101,7 +132,6 @@ export default function Home() {
               alt="Kenyan man checking Finora on his phone"
               className="w-full h-full object-cover object-center"
             />
-            {/* Subtle overlay caption */}
             <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm rounded-2xl px-5 py-3 shadow-lg">
               <p className="font-semibold text-foreground text-sm">Brian, Nairobi</p>
               <p className="text-xs text-muted-foreground">Saved KSh 8,400 his first month</p>
@@ -161,14 +191,19 @@ export default function Home() {
         <section className="px-4 py-10 max-w-2xl mx-auto w-full">
           <div className="text-center mb-8 space-y-2">
             <h2 className="font-display font-bold text-2xl text-foreground">Pick your plan</h2>
-            <p className="text-sm text-muted-foreground">Start free. Upgrade when you're ready.</p>
+            <p className="text-sm text-muted-foreground">
+              Pay like buying airtime — daily, weekly, or monthly. No subscription traps.
+            </p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-5">
             {/* FREE */}
-            <button
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => setSelectedPlan("FREE")}
-              className={`relative text-left transition-all duration-300 rounded-3xl p-1 ${
+              onKeyDown={(e) => e.key === "Enter" && setSelectedPlan("FREE")}
+              className={`relative text-left cursor-pointer transition-all duration-300 rounded-3xl p-1 ${
                 selectedPlan === "FREE"
                   ? "bg-primary shadow-xl ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
                   : "bg-card hover:bg-secondary/40 border border-border/50 hover:border-primary/30"
@@ -180,10 +215,9 @@ export default function Home() {
                 </p>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-extrabold">KSh 0</span>
-                  <span className={`text-sm ${selectedPlan === "FREE" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mo</span>
                 </div>
                 <p className={`text-sm mb-5 ${selectedPlan === "FREE" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-                  Perfect to get started. No strings.
+                  Real coaching, no strings.
                 </p>
                 <ul className="space-y-3">
                   {[
@@ -199,12 +233,15 @@ export default function Home() {
                   ))}
                 </ul>
               </div>
-            </button>
+            </div>
 
             {/* PRO */}
-            <button
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => setSelectedPlan("PRO")}
-              className={`relative text-left transition-all duration-300 rounded-3xl p-1 ${
+              onKeyDown={(e) => e.key === "Enter" && setSelectedPlan("PRO")}
+              className={`relative text-left cursor-pointer transition-all duration-300 rounded-3xl p-1 ${
                 selectedPlan === "PRO"
                   ? "bg-primary shadow-xl ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
                   : "bg-card hover:bg-secondary/40 border border-border/50 hover:border-primary/30"
@@ -215,13 +252,40 @@ export default function Home() {
                   <p className={`text-xs font-bold uppercase tracking-widest ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>Pro</p>
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-extrabold">KSh 199</span>
-                  <span className={`text-sm ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mo</span>
+
+                {/* Duration picker — uses buttons (valid inside a div) */}
+                <div className={`flex gap-1.5 mb-3 rounded-xl p-1 ${selectedPlan === "PRO" ? "bg-primary-foreground/10" : "bg-secondary/50"}`}>
+                  {PRO_DURATIONS.map((d) => (
+                    <button
+                      key={d.key}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setSelectedPlan("PRO"); setSelectedDuration(d.key); }}
+                      className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all ${
+                        selectedDuration === d.key
+                          ? selectedPlan === "PRO"
+                            ? "bg-white/20 text-white"
+                            : "bg-primary text-primary-foreground"
+                          : selectedPlan === "PRO"
+                            ? "text-primary-foreground/60 hover:text-primary-foreground/80"
+                            : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
                 </div>
-                <p className={`text-sm mb-5 ${selectedPlan === "PRO" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-                  Deeper coaching, bespoke plans.
-                </p>
+
+                <div className="flex items-baseline gap-1 mb-0.5">
+                  <span className="text-3xl font-extrabold">KSh {activeDuration.amount}</span>
+                  <span className={`text-sm ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                    /{activeDuration.period}
+                  </span>
+                </div>
+                <div className={`flex items-center gap-1.5 text-xs mb-4 ${selectedPlan === "PRO" ? "text-accent" : "text-primary"}`}>
+                  <Zap className="w-3 h-3" />
+                  <span>{activeDuration.tagline}</span>
+                </div>
+
                 <ul className="space-y-3">
                   {[
                     "Everything in Free",
@@ -238,7 +302,7 @@ export default function Home() {
                   ))}
                 </ul>
               </div>
-            </button>
+            </div>
           </div>
 
           <div className="mt-8 flex flex-col items-center gap-3">
@@ -248,13 +312,17 @@ export default function Home() {
               onClick={handleStart}
               disabled={createConversation.isPending}
             >
-              {createConversation.isPending ? "Setting up…" : (
-                <>Start with {selectedPlan === "FREE" ? "Free" : "Pro"} — let's go <ArrowRight className="w-5 h-5" /></>
+              {createConversation.isPending ? "Setting up…" : selectedPlan === "PRO" ? (
+                <>Pay KSh {activeDuration.amount} via M-Pesa <ArrowRight className="w-5 h-5" /></>
+              ) : (
+                <>Start for free <ArrowRight className="w-5 h-5" /></>
               )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              No credit card. No complicated sign-up.{" "}
-              <span className="text-primary font-medium">Karibu sana.</span>
+              {selectedPlan === "PRO"
+                ? "M-Pesa PIN prompt sent straight to your phone. No card needed."
+                : <>No credit card. No sign-up.{" "}<span className="text-primary font-medium">Karibu sana.</span></>
+              }
             </p>
           </div>
         </section>
@@ -266,6 +334,15 @@ export default function Home() {
           </p>
         </footer>
       </main>
+
+      {/* M-Pesa Payment Modal */}
+      <MpesaModal
+        open={showMpesa}
+        duration={selectedDuration}
+        amount={activeDuration.amount}
+        onClose={() => setShowMpesa(false)}
+        onPaid={handlePaid}
+      />
     </div>
   );
 }
