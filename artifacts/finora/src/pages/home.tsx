@@ -4,6 +4,7 @@ import { Check, Sparkles, ArrowRight, ShieldCheck, TrendingUp, MessageCircle } f
 import { Button } from "@/components/ui/button";
 import { useCreateOpenaiConversation } from "@workspace/api-client-react";
 import finoraLogo from "@/assets/finora-logo.png";
+import heroImage from "@/assets/hero-kenyan.jpg";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -12,22 +13,14 @@ export default function Home() {
 
   const handleStart = () => {
     createConversation.mutate(
-      {
-        data: {
-          title: "New Conversation",
-          plan: selectedPlan,
-        },
-      },
-      {
-        onSuccess: (conversation) => {
-          setLocation(`/chat?id=${conversation.id}`);
-        },
-      }
+      { data: { title: "New Conversation", plan: selectedPlan } },
+      { onSuccess: (conversation) => setLocation(`/chat?id=${conversation.id}`) }
     );
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background selection:bg-primary/20 flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col selection:bg-primary/20">
+
       {/* Header */}
       <header className="px-6 py-5 lg:px-12 flex items-center justify-between border-b border-border/40">
         <div className="flex items-center gap-3">
@@ -36,79 +29,125 @@ export default function Home() {
         </div>
         <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
           <ShieldCheck className="w-4 h-4 text-primary" />
-          <span>Salama na ya kuaminika</span>
+          <span>Secure &amp; trusted</span>
         </div>
       </header>
 
-      {/* Hero */}
       <main className="flex-1 flex flex-col">
 
-        {/* Hero section */}
-        <section className="flex flex-col items-center justify-center px-4 pt-14 pb-10 text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-primary/20">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Kwa kila mwananchi wa Kenya
-          </div>
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <section className="grid lg:grid-cols-2 gap-0 min-h-[520px]">
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight text-foreground leading-[1.1] max-w-4xl">
-            Mshauri wako wa{" "}
-            <span className="text-primary relative inline-block">
-              fedha
-              <span className="absolute -bottom-1 left-0 w-full h-1.5 bg-accent rounded-full opacity-60" />
-            </span>{" "}
-            — daima yuko hapa.
-          </h1>
+          {/* Left: copy */}
+          <div className="flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-14 space-y-8">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-semibold px-4 py-1.5 rounded-full w-fit border border-primary/20">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              For everyday Kenyans
+            </div>
 
-          <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed">
-            Huna haja ya kwenda benki au kulipa mshauri ghali.
-            Finora anakusaidia kudhibiti pesa yako — kuanzia mshahara,
-            karo, hadi akiba yako ya mwezi — kwa lugha unayoielewa.
-          </p>
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-foreground leading-[1.08]">
+                Your personal<br />
+                <span className="text-primary relative">
+                  money coach
+                  <span className="absolute -bottom-1 left-0 w-full h-1.5 bg-accent rounded-full opacity-70" />
+                </span>
+                , bro.
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
+                Whether you're living paycheck to paycheck, drowning in loans, or just trying to
+                save that first KSh 10,000 — Finora gets you. No jargon, no judgment, just real talk.
+              </p>
+            </div>
 
-          {/* Social proof / relatability */}
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {[
-              "Ninahema mwezi mzima",
-              "Sijui nianze wapi kuokoa",
-              "Deni linanilemea",
-              "Nataka kuwekeza lakini sijui",
-            ].map((pain, i) => (
-              <span
-                key={i}
-                className="text-sm bg-card border border-border/60 text-muted-foreground px-4 py-2 rounded-full"
+            {/* Pain chips */}
+            <div className="flex flex-wrap gap-2.5">
+              {[
+                "Broke before month-end",
+                "Can't start saving",
+                "Loans piling up",
+                "Want to invest but lost",
+              ].map((pain, i) => (
+                <span key={i} className="text-sm bg-card border border-border/60 text-muted-foreground px-3.5 py-1.5 rounded-full">
+                  "{pain}"
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-primary font-semibold -mt-2">
+              Finora's got answers — karibu.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                size="lg"
+                className="rounded-full h-13 px-10 text-base font-semibold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                onClick={handleStart}
+                disabled={createConversation.isPending}
               >
-                "{pain}"
-              </span>
-            ))}
+                {createConversation.isPending ? "Setting up…" : (
+                  <>Start for free <ArrowRight className="w-4 h-4" /></>
+                )}
+              </Button>
+              <p className="flex items-center text-sm text-muted-foreground sm:self-center">
+                No card needed. No complicated sign-up.
+              </p>
+            </div>
           </div>
 
-          <p className="mt-4 text-sm text-primary font-medium">
-            Finora anasikia — na ana jibu la vitendo.
-          </p>
+          {/* Right: hero image */}
+          <div className="hidden lg:block relative overflow-hidden bg-primary/5">
+            <img
+              src={heroImage}
+              alt="Kenyan man checking Finora on his phone"
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Subtle overlay caption */}
+            <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm rounded-2xl px-5 py-3 shadow-lg">
+              <p className="font-semibold text-foreground text-sm">Brian, Nairobi</p>
+              <p className="text-xs text-muted-foreground">Saved KSh 8,400 his first month</p>
+            </div>
+          </div>
         </section>
 
-        {/* How it works - 3 quick steps */}
-        <section className="px-4 py-10 max-w-4xl mx-auto w-full">
-          <div className="grid sm:grid-cols-3 gap-6">
+        {/* Mobile hero image */}
+        <div className="lg:hidden relative h-56 overflow-hidden">
+          <img
+            src={heroImage}
+            alt="Kenyan man checking Finora on his phone"
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow">
+            <p className="font-semibold text-foreground text-xs">Brian, Nairobi</p>
+            <p className="text-[11px] text-muted-foreground">Saved KSh 8,400 his first month</p>
+          </div>
+        </div>
+
+        {/* ── How it works ──────────────────────────────────────── */}
+        <section className="px-4 sm:px-8 py-12 max-w-5xl mx-auto w-full">
+          <h2 className="font-display font-bold text-2xl text-foreground text-center mb-8">
+            Simple as texting a friend
+          </h2>
+          <div className="grid sm:grid-cols-3 gap-5">
             {[
               {
                 icon: <MessageCircle className="w-6 h-6 text-primary" />,
-                title: "Mwambie hali yako",
-                desc: "Sema tu kwa maneno yako — kama unavyoongea na rafiki. Hakuna fomu ngumu.",
+                title: "Tell Finora what's up",
+                desc: "Just talk normally. \"Nimeenda broke wiki moja kabla ya mwisho wa mwezi\" — Finora gets it.",
               },
               {
                 icon: <TrendingUp className="w-6 h-6 text-primary" />,
-                title: "Pata ushauri wa vitendo",
-                desc: "Finora akuambie: hali yako ni nini, inamaanisha nini, na hatua 1–3 za kufuata.",
+                title: "Get a real action plan",
+                desc: "Not generic advice. Finora breaks it down: what's happening, why it matters, and exactly what to do next.",
               },
               {
                 icon: <ShieldCheck className="w-6 h-6 text-primary" />,
-                title: "Anza kubadilika leo",
-                desc: "Kidogo kidogo, tabia nzuri za pesa zinaanza kukua. Finora anakufuatilia.",
+                title: "Build better habits",
+                desc: "Small wins compound. Finora keeps you on track — no lectures, just consistent nudges toward your goals.",
               },
             ].map((step, i) => (
-              <div key={i} className="bg-card border border-border/50 rounded-2xl p-6 flex flex-col gap-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <div key={i} className="bg-card border border-border/50 rounded-2xl p-6 space-y-3">
+                <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center">
                   {step.icon}
                 </div>
                 <h3 className="font-display font-semibold text-foreground">{step.title}</h3>
@@ -118,87 +157,83 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Plan Picker */}
-        <section className="px-4 py-8 max-w-2xl mx-auto w-full">
-          <h2 className="text-center font-display font-bold text-2xl text-foreground mb-2">
-            Chagua mpango wako
-          </h2>
-          <p className="text-center text-sm text-muted-foreground mb-8">
-            Anza bure — unaweza kubadilisha wakati wowote.
-          </p>
+        {/* ── Plan Picker ───────────────────────────────────────── */}
+        <section className="px-4 py-10 max-w-2xl mx-auto w-full">
+          <div className="text-center mb-8 space-y-2">
+            <h2 className="font-display font-bold text-2xl text-foreground">Pick your plan</h2>
+            <p className="text-sm text-muted-foreground">Start free. Upgrade when you're ready.</p>
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-5">
-            {/* FREE Plan */}
+            {/* FREE */}
             <button
               onClick={() => setSelectedPlan("FREE")}
               className={`relative text-left transition-all duration-300 rounded-3xl p-1 ${
                 selectedPlan === "FREE"
                   ? "bg-primary shadow-xl ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
-                  : "bg-card hover:bg-secondary/50 border border-border/50 hover:border-primary/30"
+                  : "bg-card hover:bg-secondary/40 border border-border/50 hover:border-primary/30"
               }`}
             >
               <div className={`h-full rounded-[20px] p-6 ${selectedPlan === "FREE" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
-                <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${selectedPlan === "FREE" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                  Bure kabisa
+                <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${selectedPlan === "FREE" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                  Free forever
                 </p>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-bold tracking-tight">KSh 0</span>
-                  <span className={`text-sm ${selectedPlan === "FREE" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>/mwezi</span>
+                  <span className="text-3xl font-extrabold">KSh 0</span>
+                  <span className={`text-sm ${selectedPlan === "FREE" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mo</span>
                 </div>
-                <p className={`text-sm mb-6 ${selectedPlan === "FREE" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  Bora kwa kuanza safari yako ya fedha.
+                <p className={`text-sm mb-5 ${selectedPlan === "FREE" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
+                  Perfect to get started. No strings.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "Ushauri wa msingi wa bajeti",
-                    "Vidokezo vya kuokoa",
-                    "Mapitio ya matumizi",
-                    "Hadi mazungumzo 5 kwa siku",
+                    "Budgeting basics",
+                    "Saving tips & tricks",
+                    "Spending checkups",
+                    "Up to 5 chats/day",
                   ].map((f, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
+                    <li key={i} className="flex items-start gap-2.5 text-sm font-medium">
                       <Check className={`w-4 h-4 shrink-0 mt-0.5 ${selectedPlan === "FREE" ? "text-accent" : "text-primary"}`} />
-                      <span className="text-sm font-medium">{f}</span>
+                      {f}
                     </li>
                   ))}
                 </ul>
               </div>
             </button>
 
-            {/* PRO Plan */}
+            {/* PRO */}
             <button
               onClick={() => setSelectedPlan("PRO")}
               className={`relative text-left transition-all duration-300 rounded-3xl p-1 ${
                 selectedPlan === "PRO"
                   ? "bg-primary shadow-xl ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
-                  : "bg-card hover:bg-secondary/50 border border-border/50 hover:border-primary/30"
+                  : "bg-card hover:bg-secondary/40 border border-border/50 hover:border-primary/30"
               }`}
             >
               <div className={`h-full rounded-[20px] p-6 ${selectedPlan === "PRO" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
                 <div className="flex items-center justify-between mb-1">
-                  <p className={`text-xs font-semibold uppercase tracking-widest ${selectedPlan === "PRO" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    Pro
-                  </p>
+                  <p className={`text-xs font-bold uppercase tracking-widest ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>Pro</p>
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-bold tracking-tight">KSh 199</span>
-                  <span className={`text-sm ${selectedPlan === "PRO" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>/mwezi</span>
+                  <span className="text-3xl font-extrabold">KSh 199</span>
+                  <span className={`text-sm ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mo</span>
                 </div>
-                <p className={`text-sm mb-6 ${selectedPlan === "PRO" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  Uchambuzi wa kina na mipango ya muda mrefu.
+                <p className={`text-sm mb-5 ${selectedPlan === "PRO" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
+                  Deeper coaching, bespoke plans.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "Yote ya mpango wa bure",
-                    "Uchambuzi wa matumizi kwa kina",
-                    "Mpango wa bajeti kila wiki/mwezi",
-                    "Tahadhari za matumizi mengi",
-                    "Mwongozo wa kuwekeza (chini ya KSh 1M)",
-                    "Majibu ya kipaumbele",
+                    "Everything in Free",
+                    "Deep spending analysis",
+                    "Weekly & monthly plans",
+                    "Overspending alerts",
+                    "Investment starter guide",
+                    "Priority responses",
                   ].map((f, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
+                    <li key={i} className="flex items-start gap-2.5 text-sm font-medium">
                       <Check className={`w-4 h-4 shrink-0 mt-0.5 ${selectedPlan === "PRO" ? "text-accent" : "text-primary"}`} />
-                      <span className="text-sm font-medium">{f}</span>
+                      {f}
                     </li>
                   ))}
                 </ul>
@@ -213,27 +248,21 @@ export default function Home() {
               onClick={handleStart}
               disabled={createConversation.isPending}
             >
-              {createConversation.isPending ? (
-                "Inaandaa..."
-              ) : (
-                <>
-                  Anza sasa — ni bure
-                  <ArrowRight className="w-5 h-5" />
-                </>
+              {createConversation.isPending ? "Setting up…" : (
+                <>Start with {selectedPlan === "FREE" ? "Free" : "Pro"} — let's go <ArrowRight className="w-5 h-5" /></>
               )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Hakuna kadi ya benki. Hakuna usajili mgumu.{" "}
-              <span className="text-primary font-medium">Karibu.</span>
+              No credit card. No complicated sign-up.{" "}
+              <span className="text-primary font-medium">Karibu sana.</span>
             </p>
           </div>
         </section>
 
-        {/* Footer note */}
-        <footer className="mt-auto px-6 py-6 text-center border-t border-border/40">
+        {/* Footer */}
+        <footer className="mt-auto px-6 py-5 border-t border-border/40 text-center">
           <p className="text-xs text-muted-foreground">
-            Finora hutoa ushauri wa elimu — si ushauri rasmi wa kifedha.
-            Tafadhali wasiliana na mtaalamu wa fedha kwa maamuzi makubwa.
+            Finora provides financial education — not regulated financial advice. For big decisions, talk to a certified advisor.
           </p>
         </footer>
       </main>
