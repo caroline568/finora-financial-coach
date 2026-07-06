@@ -264,7 +264,7 @@ export default function Chat() {
               <Menu className="w-5 h-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <h2 className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-xs">
+              <h2 className="font-semibold text-foreground truncate max-w-[160px] sm:max-w-xs">
                 {currentConversation?.title || "Financial Session"}
               </h2>
               {currentConversation && (
@@ -274,6 +274,25 @@ export default function Chat() {
               )}
             </div>
           </div>
+          {/* Always-visible home button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/")}
+            className="text-muted-foreground hover:text-foreground gap-1.5 text-xs hidden sm:flex"
+          >
+            <img src={finoraLogo} alt="" className="w-4 h-4 object-contain" />
+            Home
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation("/")}
+            className="sm:hidden"
+            title="Back to home"
+          >
+            <img src={finoraLogo} alt="Home" className="w-5 h-5 object-contain" />
+          </Button>
         </header>
 
         {/* Messages */}

@@ -4,7 +4,8 @@ import { Check, Sparkles, ArrowRight, ShieldCheck, TrendingUp, MessageCircle, Za
 import { Button } from "@/components/ui/button";
 import { useCreateOpenaiConversation } from "@workspace/api-client-react";
 import finoraLogo from "@/assets/finora-logo.png";
-import heroImage from "@/assets/hero-kenyan.jpg";
+import heroConductor from "@/assets/hero-conductor.jpg";
+import heroMamaMboga from "@/assets/hero-mama-mboga.jpg";
 import { MpesaModal } from "@/components/mpesa-modal";
 
 type Duration = "daily" | "weekly" | "monthly";
@@ -125,31 +126,46 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: hero image */}
-          <div className="hidden lg:block relative overflow-hidden bg-primary/5">
-            <img
-              src={heroImage}
-              alt="Kenyan man checking Finora on his phone"
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm rounded-2xl px-5 py-3 shadow-lg">
-              <p className="font-semibold text-foreground text-sm">Brian, Nairobi</p>
-              <p className="text-xs text-muted-foreground">Saved KSh 8,400 his first month</p>
+          {/* Right: two hero images stacked */}
+          <div className="hidden lg:grid grid-rows-2 relative overflow-hidden bg-primary/5 gap-0.5">
+            {/* Top — conductor */}
+            <div className="relative overflow-hidden">
+              <img
+                src={heroConductor}
+                alt="Kenyan matatu conductor"
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow">
+                <p className="font-semibold text-foreground text-xs">Kamau, Conductor</p>
+                <p className="text-[11px] text-muted-foreground">Saved KSh 4,500 in 3 weeks</p>
+              </div>
+            </div>
+            {/* Bottom — mama mboga */}
+            <div className="relative overflow-hidden">
+              <img
+                src={heroMamaMboga}
+                alt="Kenyan mama mboga market vendor"
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow">
+                <p className="font-semibold text-foreground text-xs">Wanjiku, Mama Mboga</p>
+                <p className="text-[11px] text-muted-foreground">Grew savings by 30% this month</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Mobile hero image */}
-        <div className="lg:hidden relative h-56 overflow-hidden">
-          <img
-            src={heroImage}
-            alt="Kenyan man checking Finora on his phone"
-            className="w-full h-full object-cover object-top"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow">
-            <p className="font-semibold text-foreground text-xs">Brian, Nairobi</p>
-            <p className="text-[11px] text-muted-foreground">Saved KSh 8,400 his first month</p>
+        {/* Mobile hero images */}
+        <div className="lg:hidden grid grid-cols-2 gap-0.5 h-48 overflow-hidden">
+          <div className="relative overflow-hidden">
+            <img src={heroConductor} alt="Matatu conductor" className="w-full h-full object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <p className="absolute bottom-2 left-2 text-white text-[10px] font-medium drop-shadow">Kamau, Conductor</p>
+          </div>
+          <div className="relative overflow-hidden">
+            <img src={heroMamaMboga} alt="Mama mboga vendor" className="w-full h-full object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <p className="absolute bottom-2 left-2 text-white text-[10px] font-medium drop-shadow">Wanjiku, Mama Mboga</p>
           </div>
         </div>
 
@@ -328,10 +344,16 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="mt-auto px-6 py-5 border-t border-border/40 text-center">
-          <p className="text-xs text-muted-foreground">
+        <footer className="mt-auto px-6 py-5 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground text-center sm:text-left">
             Finora provides financial education — not regulated financial advice. For big decisions, talk to a certified advisor.
           </p>
+          <a
+            href="/admin"
+            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors shrink-0"
+          >
+            Admin
+          </a>
         </footer>
       </main>
 
