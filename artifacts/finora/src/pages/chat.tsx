@@ -284,8 +284,8 @@ export default function Chat() {
           <div className="max-w-3xl mx-auto space-y-8 pb-4">
             {!loadingMessages && serverMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full py-20 text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4">
-                  <Leaf className="w-8 h-8" />
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 p-3">
+                  <img src={finoraLogo} alt="Finora" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-display text-2xl font-bold">Karibu, I'm Finora.</h3>
                 <p className="text-muted-foreground max-w-md">
@@ -339,7 +339,7 @@ export default function Chat() {
               <div className="flex justify-start animate-in fade-in duration-300">
                 <div className="max-w-[85%] md:max-w-[75%] rounded-2xl p-4 md:p-6 shadow-sm bg-card border rounded-bl-sm">
                   <div className="flex items-center gap-2 mb-3 text-primary">
-                    <Leaf className="w-4 h-4" />
+                    <img src={finoraLogo} alt="" className="w-4 h-4 object-contain" />
                     <span className="font-semibold text-sm">Finora</span>
                   </div>
                   <div className="text-[15px] leading-relaxed text-foreground">
