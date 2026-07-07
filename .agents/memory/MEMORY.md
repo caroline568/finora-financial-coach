@@ -1,0 +1,3 @@
+- [Finora onboarding flow](finora-onboarding.md) — 5-screen mobile-first onboarding with persona picker; PhoneFrame wrapper centers on desktop
+- [Finora OpenAI key issue](finora-openai-key.md) — OPENAI_API_KEY must have billing credits; quota-exceeded gives silent "AI service error" in chat
+- [Finora TypeScript DB fix](finora-db-ts.md) — payments table needs `tsc -p tsconfig.json` in lib/db after schema changes to regenerate .d.ts

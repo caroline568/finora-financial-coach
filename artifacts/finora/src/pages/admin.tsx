@@ -112,8 +112,9 @@ export default function Admin() {
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Admin key</label>
+              <label htmlFor="admin-key-input" className="block text-sm font-medium text-foreground mb-1.5">Admin key</label>
               <input
+                id="admin-key-input"
                 type="password"
                 value={keyInput}
                 onChange={(e) => setKeyInput(e.target.value)}

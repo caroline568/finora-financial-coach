@@ -31,6 +31,7 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [streamingMessage, setStreamingMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -161,12 +162,14 @@ export default function Chat() {
       }
     } catch (error) {
       console.error("Failed to send message:", error);
+      setSendError("Samahani, kuna tatizo. Jaribu tena.");
       // Roll back the optimistic user message on error
       queryClient.invalidateQueries({ queryKey: getListOpenaiMessagesQueryKey(conversationId) });
+      // Restore the typed input so user doesn't lose it
+      setInput(userMessageContent);
     } finally {
       setIsSending(false);
       setStreamingMessage(null);
-      queryClient.invalidateQueries({ queryKey: getListOpenaiMessagesQueryKey(conversationId) });
     }
   };
 
@@ -383,11 +386,23 @@ export default function Chat() {
 
         {/* Input Area */}
         <div className="p-4 bg-background border-t">
+          {sendError && (
+            <div className="max-w-3xl mx-auto mb-3 flex items-center justify-between gap-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-2.5 rounded-xl">
+              <span>{sendError}</span>
+              <button
+                onClick={() => setSendError(null)}
+                className="shrink-0 opacity-60 hover:opacity-100 transition-opacity text-xs font-medium"
+                aria-label="Dismiss error"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <div className="max-w-3xl mx-auto relative">
             <Textarea 
               ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); setSendError(null); }}
               onKeyDown={handleKeyDown}
               placeholder="Ask Finora about your finances..."
               className="pr-14 min-h-[60px] max-h-[200px] py-4 rounded-[24px] shadow-sm border-border/60 focus-visible:ring-primary/20 focus-visible:border-primary bg-card"
@@ -404,7 +419,7 @@ export default function Chat() {
           </div>
           <div className="max-w-3xl mx-auto text-center mt-2">
             <span className="text-xs text-muted-foreground">
-              Finora provides guidance, not professional financial advice.
+              Finora ni mshauri wako — si ushauri rasmi wa kifedha.
             </span>
           </div>
         </div>

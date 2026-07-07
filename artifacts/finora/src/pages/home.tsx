@@ -1,370 +1,493 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Check, Sparkles, ArrowRight, ShieldCheck, TrendingUp, MessageCircle, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight, Check, ChevronRight } from "lucide-react";
 import { useCreateOpenaiConversation } from "@workspace/api-client-react";
 import finoraLogo from "@/assets/finora-logo.png";
-import heroConductor from "@/assets/hero-conductor.jpg";
-import heroMamaMboga from "@/assets/hero-mama-mboga.jpg";
-import { MpesaModal } from "@/components/mpesa-modal";
+import imgMamaMboga from "@/assets/hero-mama-mboga.jpg";
+import imgConductor from "@/assets/hero-conductor.jpg";
+import imgBodaRider from "@/assets/persona-boda-rider.jpg";
+import imgStudent from "@/assets/persona-student.jpg";
+import imgMjengo from "@/assets/persona-mjengo.jpg";
+import imgGroup from "@/assets/persona-welcome-group.jpg";
 
-type Duration = "daily" | "weekly" | "monthly";
+/* ── Types ────────────────────────────────────────────────────────── */
+type PersonaId = "conductor" | "mama-mboga" | "boda-rider" | "student" | "biashara";
 
-const PRO_DURATIONS: { key: Duration; label: string; amount: number; period: string; tagline: string }[] = [
-  { key: "daily",   label: "Day pass",    amount: 10,  period: "24 hours",  tagline: "Less than a boda fare" },
-  { key: "weekly",  label: "Week pass",   amount: 50,  period: "7 days",    tagline: "Less than lunch money" },
-  { key: "monthly", label: "Month pass",  amount: 199, period: "30 days",   tagline: "Under KSh 7 a day" },
+const PERSONAS: {
+  id: PersonaId;
+  emoji: string;
+  label: string;
+  desc: string;
+  image: string;
+}[] = [
+  {
+    id: "conductor",
+    emoji: "🚌",
+    label: "Conductor",
+    desc: "Dhibiti mapato ya siku",
+    image: imgConductor,
+  },
+  {
+    id: "mama-mboga",
+    emoji: "🥬",
+    label: "Mama Mboga",
+    desc: "Panga biashara yako",
+    image: imgMamaMboga,
+  },
+  {
+    id: "boda-rider",
+    emoji: "🏍️",
+    label: "Boda Rider",
+    desc: "Okokoa kwa safari",
+    image: imgBodaRider,
+  },
+  {
+    id: "student",
+    emoji: "🎓",
+    label: "Student",
+    desc: "Simamia hela za matumizi",
+    image: imgStudent,
+  },
+  {
+    id: "biashara",
+    emoji: "🏪",
+    label: "Biashara Ndogo",
+    desc: "Kukua kidogo kidogo",
+    image: imgMjengo,
+  },
 ];
 
+const TOTAL_SCREENS = 5;
+const GREEN = "#1a6b3a";
+
+/* ── Dot indicator ────────────────────────────────────────────────── */
+function Dots({ current }: { current: number }) {
+  return (
+    <div className="flex justify-center gap-1.5 pt-3 pb-2">
+      {Array.from({ length: TOTAL_SCREENS }).map((_, i) => (
+        <span
+          key={i}
+          style={i === current ? { backgroundColor: GREEN } : {}}
+          className={`rounded-full transition-all duration-300 ${
+            i === current ? "w-6 h-[7px]" : "w-[7px] h-[7px] bg-gray-300"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ── Phone wrapper — full-screen on mobile, card on desktop ───────── */
+function PhoneFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-[100dvh] bg-[#dde8e0] flex items-center justify-center lg:p-8 p-0">
+      <div className="w-full max-w-[390px] h-[100dvh] lg:h-[820px] lg:rounded-[48px] lg:shadow-[0_40px_80px_rgba(0,0,0,0.25)] bg-[#f5f7f5] overflow-hidden relative flex flex-col">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ── Back button ──────────────────────────────────────────────────── */
+function BackBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm active:scale-95 transition-transform"
+      aria-label="Rudi nyuma"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-700" />
+    </button>
+  );
+}
+
+/* ── Green CTA button ─────────────────────────────────────────────── */
+function GreenBtn({
+  children,
+  onClick,
+  disabled = false,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{ backgroundColor: disabled ? undefined : GREEN }}
+      className="w-full disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-[15px] rounded-2xl flex items-center justify-center gap-2 text-[15px] active:scale-[0.98] transition-transform"
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════ */
+/*  Main Component                                                    */
+/* ══════════════════════════════════════════════════════════════════ */
 export default function Home() {
   const [, setLocation] = useLocation();
-  const [selectedPlan, setSelectedPlan] = useState<"FREE" | "PRO">("FREE");
-  const [selectedDuration, setSelectedDuration] = useState<Duration>("weekly");
-  const [showMpesa, setShowMpesa] = useState(false);
+  const [screen, setScreen] = useState(0);
+  const [persona, setPersona] = useState<PersonaId | null>(null);
   const createConversation = useCreateOpenaiConversation();
 
-  const activeDuration = PRO_DURATIONS.find((d) => d.key === selectedDuration)!;
+  const next = () => setScreen((s) => Math.min(s + 1, TOTAL_SCREENS - 1));
+  const back = () => setScreen((s) => Math.max(s - 1, 0));
 
-  const handleStart = () => {
-    if (selectedPlan === "PRO") {
-      setShowMpesa(true);
-      return;
-    }
+  const openApp = () => {
+    const found = PERSONAS.find((p) => p.id === persona);
+    const title = found ? `${found.label} — New Session` : "New Conversation";
     createConversation.mutate(
-      { data: { title: "New Conversation", plan: "FREE" } },
+      { data: { title, plan: "FREE" } },
       { onSuccess: (conv) => setLocation(`/chat?id=${conv.id}`) }
     );
   };
 
-  const handlePaid = (checkoutRequestId: string) => {
-    setShowMpesa(false);
-    createConversation.mutate(
-      {
-        data: {
-          title: "New Conversation",
-          plan: "PRO",
-          // @ts-expect-error — extra field passed through for payment verification
-          checkoutRequestId,
-        },
-      },
-      { onSuccess: (conv) => setLocation(`/chat?id=${conv.id}`) }
-    );
-  };
+  /* ─── Screen 0 — HERO ────────────────────────────────────────── */
+  if (screen === 0) {
+    return (
+      <PhoneFrame>
+        <div className="relative h-full flex flex-col">
+          {/* Background image */}
+          <img
+            src={imgMamaMboga}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          {/* Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/80" />
 
-  return (
-    <div className="min-h-[100dvh] bg-background flex flex-col selection:bg-primary/20">
+          {/* Logo */}
+          <div className="relative z-10 flex items-center gap-2.5 px-6 pt-14">
+            <img src={finoraLogo} alt="Finora" className="w-9 h-9 object-contain drop-shadow" />
+            <span className="text-white font-extrabold text-2xl tracking-tight drop-shadow">
+              Finora
+            </span>
+          </div>
 
-      {/* Header */}
-      <header className="px-6 py-5 lg:px-12 flex items-center justify-between border-b border-border/40">
-        <div className="flex items-center gap-3">
-          <img src={finoraLogo} alt="Finora" className="w-9 h-9 object-contain" />
-          <span className="text-primary font-display font-bold text-2xl tracking-tight">Finora</span>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="w-4 h-4 text-primary" />
-          <span>Secure &amp; trusted</span>
-        </div>
-      </header>
-
-      <main className="flex-1 flex flex-col">
-
-        {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="grid lg:grid-cols-2 gap-0 min-h-[520px]">
-
-          {/* Left: copy */}
-          <div className="flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-14 space-y-8">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-semibold px-4 py-1.5 rounded-full w-fit border border-primary/20">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              For everyday Kenyans
-            </div>
-
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-foreground leading-[1.08]">
-                Your personal<br />
-                <span className="text-primary relative">
-                  money coach
-                  <span className="absolute -bottom-1 left-0 w-full h-1.5 bg-accent rounded-full opacity-70" />
-                </span>.
+          {/* Bottom copy */}
+          <div className="relative z-10 mt-auto px-6 pb-6 space-y-5">
+            <div>
+              <h1 className="text-white font-extrabold text-[32px] leading-[1.15] drop-shadow-lg">
+                Finora ni msaidizi<br />wako wa pesa.
               </h1>
-              <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
-                Whether you're living paycheck to paycheck, drowning in loans, or just trying to
-                save that first KSh 10,000 — Finora gets you. No jargon, no judgment, just real talk.
+              <p className="text-white/75 text-[15px] mt-2">
+                Akili yako. Pesa yako. Maisha yako.
               </p>
             </div>
 
-            {/* Pain chips */}
-            <div className="flex flex-wrap gap-2.5">
-              {[
-                "Broke before month-end",
-                "Can't start saving",
-                "Loans piling up",
-                "Want to invest but lost",
-              ].map((pain, i) => (
-                <span key={i} className="text-sm bg-card border border-border/60 text-muted-foreground px-3.5 py-1.5 rounded-full">
-                  "{pain}"
-                </span>
-              ))}
-            </div>
-            <p className="text-sm text-primary font-semibold -mt-2">
-              Finora's got answers — karibu.
+            <GreenBtn onClick={next}>
+              Anza Sasa <ArrowRight className="w-5 h-5" />
+            </GreenBtn>
+
+            <p className="text-center text-white/65 text-[13px]">
+              Tayari nina akaunti?{" "}
+              <button
+                onClick={openApp}
+                style={{ color: "#4ade80" }}
+                className="font-bold"
+              >
+                Ingia
+              </button>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                size="lg"
-                className="rounded-full h-13 px-10 text-base font-semibold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5 flex items-center gap-2"
-                onClick={handleStart}
-                disabled={createConversation.isPending}
-              >
-                {createConversation.isPending ? "Setting up…" : (
-                  <>Start for free <ArrowRight className="w-4 h-4" /></>
-                )}
-              </Button>
-              <p className="flex items-center text-sm text-muted-foreground sm:self-center">
-                No card needed. No sign-up.
-              </p>
-            </div>
-          </div>
-
-          {/* Right: two hero images stacked */}
-          <div className="hidden lg:grid grid-rows-2 relative overflow-hidden bg-primary/5 gap-0.5">
-            {/* Top — conductor */}
-            <div className="relative overflow-hidden">
-              <img
-                src={heroConductor}
-                alt="Kenyan matatu conductor"
-                className="w-full h-full object-cover object-center"
-              />
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow">
-                <p className="font-semibold text-foreground text-xs">Kamau, Conductor</p>
-                <p className="text-[11px] text-muted-foreground">Saved KSh 4,500 in 3 weeks</p>
-              </div>
-            </div>
-            {/* Bottom — mama mboga */}
-            <div className="relative overflow-hidden">
-              <img
-                src={heroMamaMboga}
-                alt="Kenyan mama mboga market vendor"
-                className="w-full h-full object-cover object-center"
-              />
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow">
-                <p className="font-semibold text-foreground text-xs">Wanjiku, Mama Mboga</p>
-                <p className="text-[11px] text-muted-foreground">Grew savings by 30% this month</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Mobile hero images */}
-        <div className="lg:hidden grid grid-cols-2 gap-0.5 h-48 overflow-hidden">
-          <div className="relative overflow-hidden">
-            <img src={heroConductor} alt="Matatu conductor" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <p className="absolute bottom-2 left-2 text-white text-[10px] font-medium drop-shadow">Kamau, Conductor</p>
-          </div>
-          <div className="relative overflow-hidden">
-            <img src={heroMamaMboga} alt="Mama mboga vendor" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <p className="absolute bottom-2 left-2 text-white text-[10px] font-medium drop-shadow">Wanjiku, Mama Mboga</p>
+            <Dots current={screen} />
           </div>
         </div>
+      </PhoneFrame>
+    );
+  }
 
-        {/* ── How it works ──────────────────────────────────────── */}
-        <section className="px-4 sm:px-8 py-12 max-w-5xl mx-auto w-full">
-          <h2 className="font-display font-bold text-2xl text-foreground text-center mb-8">
-            Simple as texting a friend
-          </h2>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {[
-              {
-                icon: <MessageCircle className="w-6 h-6 text-primary" />,
-                title: "Tell Finora what's up",
-                desc: "Just talk normally. \"Nimeenda broke wiki moja kabla ya mwisho wa mwezi\" — Finora gets it.",
-              },
-              {
-                icon: <TrendingUp className="w-6 h-6 text-primary" />,
-                title: "Get a real action plan",
-                desc: "Not generic advice. Finora breaks it down: what's happening, why it matters, and exactly what to do next.",
-              },
-              {
-                icon: <ShieldCheck className="w-6 h-6 text-primary" />,
-                title: "Build better habits",
-                desc: "Small wins compound. Finora keeps you on track — no lectures, just consistent nudges toward your goals.",
-              },
-            ].map((step, i) => (
-              <div key={i} className="bg-card border border-border/50 rounded-2xl p-6 space-y-3">
-                <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center">
-                  {step.icon}
-                </div>
-                <h3 className="font-display font-semibold text-foreground">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Plan Picker ───────────────────────────────────────── */}
-        <section className="px-4 py-10 max-w-2xl mx-auto w-full">
-          <div className="text-center mb-8 space-y-2">
-            <h2 className="font-display font-bold text-2xl text-foreground">Pick your plan</h2>
-            <p className="text-sm text-muted-foreground">
-              Pay like buying airtime — daily, weekly, or monthly. No subscription traps.
-            </p>
+  /* ─── Screen 1 — FEATURES ────────────────────────────────────── */
+  if (screen === 1) {
+    return (
+      <PhoneFrame>
+        <div className="flex flex-col h-full">
+          {/* Nav */}
+          <div className="px-5 pt-12 pb-3 flex items-center">
+            <BackBtn onClick={back} />
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-5">
-            {/* FREE */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedPlan("FREE")}
-              onKeyDown={(e) => e.key === "Enter" && setSelectedPlan("FREE")}
-              className={`relative text-left cursor-pointer transition-all duration-300 rounded-3xl p-1 ${
-                selectedPlan === "FREE"
-                  ? "bg-primary shadow-xl ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
-                  : "bg-card hover:bg-secondary/40 border border-border/50 hover:border-primary/30"
-              }`}
-            >
-              <div className={`h-full rounded-[20px] p-6 ${selectedPlan === "FREE" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
-                <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${selectedPlan === "FREE" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                  Free forever
-                </p>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-extrabold">KSh 0</span>
-                </div>
-                <p className={`text-sm mb-5 ${selectedPlan === "FREE" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-                  Real coaching, no strings.
-                </p>
-                <ul className="space-y-3">
-                  {[
-                    "Budgeting basics",
-                    "Saving tips & tricks",
-                    "Spending checkups",
-                    "Up to 5 chats/day",
-                  ].map((f, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm font-medium">
-                      <Check className={`w-4 h-4 shrink-0 mt-0.5 ${selectedPlan === "FREE" ? "text-accent" : "text-primary"}`} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+          {/* Image pill */}
+          <div className="mx-5 rounded-3xl overflow-hidden h-52 shrink-0 shadow-md">
+            <img
+              src={imgConductor}
+              alt="Conductor"
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
 
-            {/* PRO */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedPlan("PRO")}
-              onKeyDown={(e) => e.key === "Enter" && setSelectedPlan("PRO")}
-              className={`relative text-left cursor-pointer transition-all duration-300 rounded-3xl p-1 ${
-                selectedPlan === "PRO"
-                  ? "bg-primary shadow-xl ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]"
-                  : "bg-card hover:bg-secondary/40 border border-border/50 hover:border-primary/30"
-              }`}
-            >
-              <div className={`h-full rounded-[20px] p-6 ${selectedPlan === "PRO" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <p className={`text-xs font-bold uppercase tracking-widest ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>Pro</p>
-                  <Sparkles className="w-4 h-4 text-accent" />
-                </div>
+          {/* Content */}
+          <div className="flex-1 px-6 pt-6 pb-4 flex flex-col min-h-0">
+            <h2 className="font-extrabold text-[22px] text-gray-900 leading-snug mb-6">
+              Finora inakusaidia<br />kudhibiti pesa zako kila siku.
+            </h2>
 
-                {/* Duration picker — uses buttons (valid inside a div) */}
-                <div className={`flex gap-1.5 mb-3 rounded-xl p-1 ${selectedPlan === "PRO" ? "bg-primary-foreground/10" : "bg-secondary/50"}`}>
-                  {PRO_DURATIONS.map((d) => (
-                    <button
-                      key={d.key}
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setSelectedPlan("PRO"); setSelectedDuration(d.key); }}
-                      className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all ${
-                        selectedDuration === d.key
-                          ? selectedPlan === "PRO"
-                            ? "bg-white/20 text-white"
-                            : "bg-primary text-primary-foreground"
-                          : selectedPlan === "PRO"
-                            ? "text-primary-foreground/60 hover:text-primary-foreground/80"
-                            : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-baseline gap-1 mb-0.5">
-                  <span className="text-3xl font-extrabold">KSh {activeDuration.amount}</span>
-                  <span className={`text-sm ${selectedPlan === "PRO" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                    /{activeDuration.period}
+            <ul className="space-y-4 flex-1">
+              {[
+                "Fuatilia mapato na matumizi",
+                "Tenga akiba kidogo kidogo",
+                "Pata ushauri wa kifedha",
+                "Fikia malengo yako",
+              ].map((feat) => (
+                <li key={feat} className="flex items-center gap-3.5">
+                  <span
+                    style={{ backgroundColor: GREEN }}
+                    className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                  >
+                    <Check className="w-3.5 h-3.5 text-white" />
                   </span>
-                </div>
-                <div className={`flex items-center gap-1.5 text-xs mb-4 ${selectedPlan === "PRO" ? "text-accent" : "text-primary"}`}>
-                  <Zap className="w-3 h-3" />
-                  <span>{activeDuration.tagline}</span>
-                </div>
+                  <span className="text-gray-800 font-semibold text-[15px]">{feat}</span>
+                </li>
+              ))}
+            </ul>
 
-                <ul className="space-y-3">
-                  {[
-                    "Everything in Free",
-                    "Deep spending analysis",
-                    "Weekly & monthly plans",
-                    "Overspending alerts",
-                    "Investment starter guide",
-                    "Priority responses",
-                  ].map((f, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm font-medium">
-                      <Check className={`w-4 h-4 shrink-0 mt-0.5 ${selectedPlan === "PRO" ? "text-accent" : "text-primary"}`} />
-                      {f}
-                    </li>
+            <GreenBtn onClick={next}>
+              Inayofuata <ArrowRight className="w-5 h-5" />
+            </GreenBtn>
+            <Dots current={screen} />
+          </div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+
+  /* ─── Screen 2 — AI DEMO ─────────────────────────────────────── */
+  if (screen === 2) {
+    return (
+      <PhoneFrame>
+        <div className="flex flex-col h-full">
+          <div className="px-5 pt-12 pb-3 flex items-center">
+            <BackBtn onClick={back} />
+          </div>
+
+          {/* Image pill */}
+          <div className="mx-5 rounded-3xl overflow-hidden h-44 shrink-0 shadow-md">
+            <img
+              src={imgBodaRider}
+              alt="Boda rider"
+              className="w-full h-full object-cover object-top"
+            />
+          </div>
+
+          <div className="flex-1 px-6 pt-5 pb-4 flex flex-col min-h-0">
+            <h2 className="font-extrabold text-[22px] text-gray-900 leading-snug">
+              Kocha wako wa kifedha AI 24/7
+            </h2>
+            <p className="text-gray-400 text-[13px] mt-1 mb-4">
+              Uliza chochote kuhusu pesa zako. Finora iko hapa kukusaidia.
+            </p>
+
+            {/* Chat preview card */}
+            <div className="bg-white rounded-2xl p-4 space-y-3 flex-1 shadow-sm border border-gray-100 overflow-hidden">
+              {/* User bubble */}
+              <div className="flex justify-end">
+                <div
+                  style={{ backgroundColor: GREEN }}
+                  className="text-white text-[13px] rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[78%]"
+                >
+                  Nisaidie kupanga bajeti ya wiki hii
+                </div>
+              </div>
+              {/* Finora bubble */}
+              <div className="flex gap-2 items-end">
+                <img
+                  src={finoraLogo}
+                  alt="Finora"
+                  className="w-7 h-7 rounded-full object-contain shrink-0 bg-primary/10 p-0.5"
+                />
+                <div className="bg-gray-50 border border-gray-100 text-gray-800 text-[13px] rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[78%]">
+                  Sawa! Tuangalie mapato yako, matumizi na malengo yako. 💪
+                </div>
+              </div>
+              {/* Typing indicator */}
+              <div className="flex gap-2 items-end">
+                <img
+                  src={finoraLogo}
+                  alt=""
+                  className="w-7 h-7 rounded-full object-contain shrink-0 bg-primary/10 p-0.5 opacity-60"
+                />
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 150}ms` }}
+                    />
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
+
+            <GreenBtn onClick={next}>
+              Inayofuata <ArrowRight className="w-5 h-5" />
+            </GreenBtn>
+            <Dots current={screen} />
+          </div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+
+  /* ─── Screen 3 — WHO ARE YOU? ────────────────────────────────── */
+  if (screen === 3) {
+    return (
+      <PhoneFrame>
+        <div className="flex flex-col h-full">
+          <div className="px-5 pt-12 pb-2 flex items-center">
+            <BackBtn onClick={back} />
           </div>
 
-          <div className="mt-8 flex flex-col items-center gap-3">
-            <Button
-              size="lg"
-              className="rounded-full h-14 px-12 text-base font-semibold bg-accent text-accent-foreground hover:bg-accent/90 shadow-xl shadow-accent/20 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto flex items-center gap-2"
-              onClick={handleStart}
-              disabled={createConversation.isPending}
-            >
-              {createConversation.isPending ? "Setting up…" : selectedPlan === "PRO" ? (
-                <>Pay KSh {activeDuration.amount} via M-Pesa <ArrowRight className="w-5 h-5" /></>
-              ) : (
-                <>Start for free <ArrowRight className="w-5 h-5" /></>
-              )}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              {selectedPlan === "PRO"
-                ? "M-Pesa PIN prompt sent straight to your phone. No card needed."
-                : <>No credit card. No sign-up.{" "}<span className="text-primary font-medium">Karibu sana.</span></>
-              }
+          <div className="flex-1 px-5 flex flex-col min-h-0 pb-4">
+            <div className="mb-4">
+              <h2 className="font-extrabold text-[22px] text-gray-900 leading-snug">
+                Finora ni kwa kila Mwananchi.
+              </h2>
+              <p className="text-gray-400 text-[13px] mt-1">
+                Unatumia kama nani? Chagua ili tuanze vizuri.
+              </p>
+            </div>
+
+            {/* Persona list */}
+            <div className="space-y-2.5 flex-1 overflow-y-auto pr-0.5">
+              {PERSONAS.map((p) => {
+                const active = persona === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setPersona(p.id)}
+                    style={active ? { borderColor: GREEN } : {}}
+                    className={`w-full flex items-center gap-4 p-3.5 rounded-2xl border-2 transition-all text-left ${
+                      active
+                        ? "bg-[#f0f9f4]"
+                        : "border-gray-100 bg-white hover:border-gray-200"
+                    }`}
+                  >
+                    {/* Small persona photo */}
+                    <img
+                      src={p.image}
+                      alt={p.label}
+                      className="w-12 h-12 rounded-xl object-cover shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-900 text-[14px] flex items-center gap-1.5">
+                        <span>{p.emoji}</span> {p.label}
+                      </p>
+                      <p className="text-gray-400 text-[12px] mt-0.5">{p.desc}</p>
+                    </div>
+                    <ChevronRight
+                      style={active ? { color: GREEN } : {}}
+                      className="w-5 h-5 text-gray-200 shrink-0 transition-colors"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            <GreenBtn onClick={next} disabled={!persona}>
+              Inayofuata <ArrowRight className="w-5 h-5" />
+            </GreenBtn>
+            <Dots current={screen} />
+          </div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+
+  /* ─── Screen 4 — WELCOME / SIGNUP ───────────────────────────── */
+  return (
+    <PhoneFrame>
+      <div className="flex flex-col h-full">
+        {/* Group photo — top half */}
+        <div className="relative h-[46%] shrink-0">
+          <img
+            src={imgGroup}
+            alt="Finora community"
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f5f7f5]" />
+          {/* Back button */}
+          <button
+            onClick={back}
+            className="absolute top-12 left-5 flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm shadow-sm active:scale-95 transition-transform"
+            aria-label="Rudi nyuma"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 px-6 pt-2 pb-6 flex flex-col">
+          <div className="mb-auto">
+            <h2 className="font-extrabold text-[26px] text-gray-900">
+              Karibu Finora! 🎉
+            </h2>
+            <p className="text-gray-400 text-[14px] mt-1">
+              Tuko pamoja kukuza maisha yako ya kifedha.
             </p>
           </div>
-        </section>
 
-        {/* Footer */}
-        <footer className="mt-auto px-6 py-5 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground text-center sm:text-left">
-            Finora provides financial education — not regulated financial advice. For big decisions, talk to a certified advisor.
-          </p>
+          <div className="space-y-3 mt-6">
+            {/* Primary CTA */}
+            <GreenBtn onClick={openApp} disabled={createConversation.isPending}>
+              {createConversation.isPending ? (
+                "Inaandaa…"
+              ) : (
+                <>
+                  Unda Akaunti <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </GreenBtn>
+
+            {/* Google button */}
+            <button
+              onClick={openApp}
+              disabled={createConversation.isPending}
+              className="w-full bg-white border-2 border-gray-200 text-gray-800 font-bold py-[14px] rounded-2xl flex items-center justify-center gap-2.5 text-[15px] active:scale-[0.98] transition-transform disabled:opacity-50"
+            >
+              {/* Google "G" logo */}
+              <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Endelea na Google
+            </button>
+
+            <p className="text-center text-[11px] text-gray-400 pt-1 leading-relaxed">
+              Kwa kuendelea, unakubali{" "}
+              <button className="underline focus:outline-none focus:ring-1 focus:ring-gray-400 rounded">Sheria na Masharti</button>{" "}
+              na{" "}
+              <button className="underline focus:outline-none focus:ring-1 focus:ring-gray-400 rounded">Sera ya Faragha</button>{" "}
+              ya Finora.
+            </p>
+          </div>
+
+          <Dots current={screen} />
+
+          {/* Hidden admin link */}
           <a
             href="/admin"
-            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors shrink-0"
+            className="text-center text-[10px] text-gray-300 hover:text-gray-400 transition-colors mt-1"
           >
             Admin
           </a>
-        </footer>
-      </main>
-
-      {/* M-Pesa Payment Modal */}
-      <MpesaModal
-        open={showMpesa}
-        duration={selectedDuration}
-        amount={activeDuration.amount}
-        onClose={() => setShowMpesa(false)}
-        onPaid={handlePaid}
-      />
-    </div>
+        </div>
+      </div>
+    </PhoneFrame>
   );
 }
