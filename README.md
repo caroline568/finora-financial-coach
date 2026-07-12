@@ -9,15 +9,25 @@ Finora is a modern personal finance web application designed specifically for th
 Built with a clean, responsive interface and modern web technologies, Finora demonstrates full-stack development skills, secure authentication, cloud database integration, and scalable application architecture. The project emphasizes usability, accessibility, and data-driven financial management.
 
 ✨ Features
+
 🤖 AI-powered financial guidance
+
 💰 Income and expense tracking
+
 📊 Budget planning and management
+
 🎯 Savings goal tracking
+
 📈 Financial analytics and insights
+
 🔐 Secure user authentication
+
 ☁️ Cloud-based data storage with Supabase
+
 📱 Fully responsive design
+
 ⚡ Fast and intuitive user experience
+
 🛠 Tech Stack
 Frontend
 React
